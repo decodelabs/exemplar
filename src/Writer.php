@@ -158,7 +158,7 @@ class Writer implements
     /**
      * Write initial XML header
      */
-    public function writeHeader(string $version = '1.0', string $encoding = 'UTF-8', ?bool $standalone = null): Writer
+    public function writeHeader(string $version = '1.0', string $encoding = 'UTF-8', bool $standalone = false): Writer
     {
         if ($this->headerWritten) {
             throw Exceptional::Logic('XML header has already been written');
@@ -169,11 +169,7 @@ class Writer implements
         }
 
         try {
-            if ($standalone !== null) {
-                $standalone = $standalone ? 'yes' : 'no';
-            }
-
-            $this->document->startDocument($version, $encoding, $standalone);
+            $this->document->startDocument($version, $encoding, $standalone ? 'yes' : 'no');
         } catch (ErrorException $e) {
             throw Exceptional::InvalidArguement($e->getMessage(), [
                 'previous' => $e
@@ -198,7 +194,7 @@ class Writer implements
         }
 
         try {
-            $this->document->writeDtd($name, $publicId, $systemId, $subset);
+            $this->document->writeDtd($name, (string)$publicId, (string)$systemId, (string)$subset);
         } catch (ErrorException $e) {
             throw Exceptional::InvalidArguement($e->getMessage(), [
                 'previous' => $e

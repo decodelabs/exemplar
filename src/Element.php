@@ -576,7 +576,12 @@ class Element implements
     public function prependCDataContent(string $content): Element
     {
         $content = $this->getDomDocument()->createCDataSection($content);
-        $this->element->insertBefore($content, $this->element->firstChild);
+
+        if ($this->element->firstChild !== null) {
+            $this->element->insertBefore($content, $this->element->firstChild);
+        } else {
+            $this->element->appendChild($content);
+        }
 
         return $this;
     }
@@ -1039,7 +1044,12 @@ class Element implements
     public function prependChild($newChild, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($newChild, $value);
-        $node = $this->element->insertBefore($node, $this->element->firstChild);
+
+        if ($this->element->firstChild !== null) {
+            $node = $this->element->insertBefore($node, $this->element->firstChild);
+        } else {
+            $node = $this->element->appendChild($node);
+        }
 
         return $this->wrapDomNode($node);
     }
@@ -1052,7 +1062,7 @@ class Element implements
     public function appendChild($newChild, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($newChild, $value);
-        $this->element->appendChild($node);
+        $node = $this->element->appendChild($node);
 
         return $this->wrapDomNode($node);
     }
@@ -1094,7 +1104,11 @@ class Element implements
         }
 
         if ($index === 0) {
-            $newNode = $this->element->insertBefore($newNode, $this->element->firstChild);
+            if ($this->element->firstChild !== null) {
+                $newNode = $this->element->insertBefore($newNode, $this->element->firstChild);
+            } else {
+                $newNode = $this->element->appendChild($newNode);
+            }
         } elseif ($index >= $count) {
             $newNode = $this->element->appendChild($newNode);
         } else {
@@ -1124,7 +1138,7 @@ class Element implements
     {
         $origChild = $origChild->getDomElement();
         $node = $this->normalizeInputChild($newChild, $value);
-        $this->element->insertBefore($node, $origChild);
+        $node = $this->element->insertBefore($node, $origChild);
 
         return $this->wrapDomNode($node);
     }
@@ -1154,9 +1168,9 @@ class Element implements
         $node = $this->normalizeInputChild($newChild, $value);
 
         if ($origChild === null) {
-            $this->element->appendChild($node);
+            $node = $this->element->appendChild($node);
         } else {
-            $this->element->insertBefore($node, $origChild);
+            $node = $this->element->insertBefore($node, $origChild);
         }
 
         return $this->wrapDomNode($node);
