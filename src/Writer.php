@@ -21,6 +21,9 @@ use ErrorException;
 use Throwable;
 use XMLWriter;
 
+/**
+ * @implements ArrayAccess<string, mixed>
+ */
 class Writer implements
     Markup,
     Provider,
@@ -36,17 +39,54 @@ class Writer implements
 
     use AttributeContainerTrait;
 
+    /**
+     * @var XMLWriter
+     */
     protected $document;
+
+    /**
+     * @var string|null
+     */
     protected $path;
 
+
+    /**
+     * @var bool
+     */
     protected $headerWritten = false;
+
+    /**
+     * @var bool
+     */
     protected $dtdWritten = false;
+
+    /**
+     * @var bool
+     */
     protected $rootWritten = false;
+
+    /**
+     * @var bool
+     */
     protected $finalized = false;
 
+
+    /**
+     * @var string|null
+     */
     protected $elementContent = null;
+
+    /**
+     * @var array<string>
+     */
     protected $rawAttributeNames = [];
+
+    /**
+     * @var int|null
+     */
     protected $currentNode = null;
+
+
 
     /**
      * Create file writer
@@ -118,7 +158,7 @@ class Writer implements
     /**
      * Write initial XML header
      */
-    public function writeHeader(string $version = '1.0', string $encoding = 'UTF-8', bool $standalone = false): Writer
+    public function writeHeader(string $version = '1.0', string $encoding = 'UTF-8', ?bool $standalone = null): Writer
     {
         if ($this->headerWritten) {
             throw Exceptional::Logic('XML header has already been written');
@@ -129,7 +169,11 @@ class Writer implements
         }
 
         try {
-            $this->document->startDocument($version, $encoding, $standalone ? true : null);
+            if ($standalone !== null) {
+                $standalone = $standalone ? 'yes' : 'no';
+            }
+
+            $this->document->startDocument($version, $encoding, $standalone);
         } catch (ErrorException $e) {
             throw Exceptional::InvalidArguement($e->getMessage(), [
                 'previous' => $e
@@ -218,7 +262,7 @@ class Writer implements
     /**
      * Write DTD entity
      */
-    public function writeDtdEntity(string $name, string $content, string $pe, string $publicId, string $systemId, string $nDataId): Writer
+    public function writeDtdEntity(string $name, string $content, bool $isParam, string $publicId, string $systemId, string $nDataId): Writer
     {
         if ($this->rootWritten) {
             throw Exceptional::Logic('XML DTD cannot be written once the document is open');
@@ -229,7 +273,7 @@ class Writer implements
         }
 
         try {
-            $this->document->writeDtdEntity($name, $content, $pe, $publicId, $systemId, $nDataId);
+            $this->document->writeDtdEntity($name, $content, $isParam, $publicId, $systemId, $nDataId);
         } catch (ErrorException $e) {
             throw Exceptional::InvalidArguement($e->getMessage(), [
                 'previous' => $e
@@ -243,6 +287,8 @@ class Writer implements
 
     /**
      * Shortcut to writeElement
+     *
+     * @param array<mixed> $args
      */
     public function __call(string $method, array $args): Writer
     {
@@ -252,6 +298,9 @@ class Writer implements
 
     /**
      * Write full element in one go
+     *
+     * @param mixed $content
+     * @param array<string, mixed>|null $attributes
      */
     public function writeElement(string $name, $content = null, array $attributes = null): Writer
     {
@@ -266,6 +315,8 @@ class Writer implements
 
     /**
      * Open element to write into
+     *
+     * @param array<string, mixed>|null $attributes
      */
     public function startElement(string $name, array $attributes = null): Writer
     {
@@ -374,6 +425,8 @@ class Writer implements
 
     /**
      * Store element content ready for writing
+     *
+     * @param mixed $content
      */
     public function setElementContent($content): Writer
     {
@@ -383,6 +436,8 @@ class Writer implements
 
     /**
      * Render element content to string
+     *
+     * @param mixed $content
      */
     protected function renderContent($content): ?string
     {
@@ -394,7 +449,7 @@ class Writer implements
             $this->completeCurrentNode();
 
             foreach ($content as $part) {
-                $this->document->text($this->renderContent($part));
+                $this->document->text((string)$this->renderContent($part));
             }
 
             return null;
@@ -425,6 +480,8 @@ class Writer implements
 
     /**
      * Write new element with CDATA section
+     *
+     * @param array<string, mixed>|null $attributes
      */
     public function writeCDataElement(string $name, ?string $content, array $attributes = null): Writer
     {
@@ -588,6 +645,8 @@ class Writer implements
 
     /**
      * Get list of attributes to be written raw
+     *
+     * @return array<string>
      */
     public function getRawAttributeNames(): array
     {
@@ -737,8 +796,10 @@ class Writer implements
 
     /**
      * Import XML string from reader node
+     *
+     * @return $this
      */
-    public function importXmlElement(Element $element)
+    public function importXmlElement(Element $element): Writer
     {
         $this->completeCurrentNode();
         $this->document->writeRaw("\n" . $element->__toString() . "\n");
@@ -778,14 +839,20 @@ class Writer implements
 
     /**
      * Shortcut to set attribute
+     *
+     * @param string $key
+     * @param mixed $value
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
         $this->setAttribute($key, $value);
     }
 
     /**
      * Shortcut to get attribute
+     *
+     * @param string $key
+     * @return mixed
      */
     public function offsetGet($key)
     {
@@ -794,22 +861,28 @@ class Writer implements
 
     /**
      * Shortcut to test for attribute
+     *
+     * @param string $key
      */
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return $this->hasAttribute($key);
     }
 
     /**
      * Shortcut to remove attribute
+     *
+     * @param string $key
      */
-    public function offsetUnset($key)
+    public function offsetUnset($key): void
     {
         $this->removeAttribute($key);
     }
 
     /**
      * Dump string
+     *
+     * @return array<string, string>
      */
     public function __debugInfo(): array
     {
@@ -820,6 +893,8 @@ class Writer implements
 
     /**
      * Export for dump inspection
+     *
+     * @return iterable<string, mixed>
      */
     public function glitchDump(): iterable
     {

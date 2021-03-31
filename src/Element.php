@@ -18,12 +18,17 @@ use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
 
+use DOMComment;
 use DOMDocument;
 use DOMElement;
+use DOMNode;
 use DOMXPath;
-use Generator;
 use Throwable;
+use Traversable;
 
+/**
+ * @implements ArrayAccess<string, mixed>
+ */
 class Element implements
     Markup,
     Consumer,
@@ -32,15 +37,20 @@ class Element implements
     Countable,
     ArrayAccess
 {
+    /**
+     * @var DOMElement
+     */
     protected $element;
 
 
     /**
      * Create from any xml type
+     *
+     * @param mixed $xml
      */
-    public static function fromXml($xml)
+    public static function fromXml($xml): Element
     {
-        if ($xml instanceof self) {
+        if ($xml instanceof Element) {
             return $xml;
         } elseif ($xml instanceof Provider) {
             return $xml->toXmlElement();
@@ -175,7 +185,7 @@ class Element implements
     /**
      * Passthrough
      */
-    public static function fromXmlElement(Element $element)
+    public static function fromXmlElement(Element $element): Element
     {
         return $element;
     }
@@ -186,7 +196,12 @@ class Element implements
     public static function fromDomDocument(DOMDocument $document): Element
     {
         $document->formatOutput = true;
-        return new static($document->documentElement);
+
+        if ($document->documentElement === null) {
+            throw Exceptional::UnexpectedValue('Document has no documentElement', null, $document);
+        }
+
+        return static::wrapDomNode($document->documentElement);
     }
 
     /**
@@ -194,8 +209,8 @@ class Element implements
      */
     public static function fromDomElement(DOMElement $element): Element
     {
-        $element->ownerDocument->formatOutput = true;
-        return new static($element);
+        self::extractOwnerDocument($element)->formatOutput = true;
+        return static::wrapDomNode($element);
     }
 
     /**
@@ -208,6 +223,21 @@ class Element implements
         return $output;
     }
 
+
+    /**
+     * Get element owner document
+     */
+    protected static function extractOwnerDocument(DOMElement $element): DOMDocument
+    {
+        if ($element->ownerDocument === null) {
+            throw Exceptional::UnexpectedValue('Element has no ownerDocument', null, $element);
+        }
+
+        return $element->ownerDocument;
+    }
+
+
+
     /**
      * Init with DOMElement
      */
@@ -216,28 +246,30 @@ class Element implements
         $this->element = $element;
     }
 
+
     /**
      * Replace this node element with a new tag
      */
     public function setTagName(string $name): Element
     {
-        $newNode = $this->element->ownerDocument->createElement($name);
+        $document = $this->getDomDocument();
+        $newNode = $document->createElement($name);
         $children = [];
 
         foreach ($this->element->childNodes as $child) {
-            $children[] = $this->element->ownerDocument->importNode($child, true);
+            $children[] = $document->importNode($child, true);
         }
 
         foreach ($children as $child) {
             $newNode->appendChild($child);
         }
 
-        foreach ($this->element->attributes as $attrNode) {
-            $this->element->ownerDocument->importNode($attrNode, true);
+        foreach ($this->element->attributes ?? [] as $attrNode) {
+            $document->importNode($attrNode, true);
             $newNode->setAttributeNode($attrNode);
         }
 
-        $this->element->parentNode->replaceChild($newNode, $this->element);
+        $this->getParentDomElement()->replaceChild($newNode, $this->element);
         $this->element = $newNode;
 
         return $this;
@@ -254,6 +286,8 @@ class Element implements
 
     /**
      * Merge attributes on node
+     *
+     * @param array<string, mixed> $attributes
      */
     public function setAttributes(array $attributes): AttributeContainer
     {
@@ -266,6 +300,8 @@ class Element implements
 
     /**
      * Replace attribute on node
+     *
+     * @param array<string, mixed> $attributes
      */
     public function replaceAttributes(array $attributes): AttributeContainer
     {
@@ -274,8 +310,10 @@ class Element implements
 
     /**
      * Set attribute on node
+     *
+     * @param mixed $value
      */
-    public function setAttribute($key, $value): AttributeContainer
+    public function setAttribute(string $key, $value): AttributeContainer
     {
         $this->element->setAttribute($key, $value);
         return $this;
@@ -283,13 +321,15 @@ class Element implements
 
     /**
      * Get all attribute values
+     *
+     * @return array<string, string|null>
      */
     public function getAttributes(): array
     {
         $output = [];
 
-        foreach ($this->element->attributes as $attrNode) {
-            $output[$attrNode->name] = $attrNode->value;
+        foreach ($this->element->attributes ?? [] as $attrNode) {
+            $output[(string)$attrNode->name] = $attrNode->value;
         }
 
         return $output;
@@ -384,6 +424,10 @@ class Element implements
      */
     public function countAttributes(): int
     {
+        if ($this->element->attributes === null) {
+            return 0;
+        }
+
         return $this->element->attributes->length;
     }
 
@@ -392,7 +436,7 @@ class Element implements
      */
     public function clearAttributes(): AttributeContainer
     {
-        foreach ($this->element->attributes as $attrNode) {
+        foreach ($this->element->attributes ?? [] as $attrNode) {
             $this->element->removeAttribute($attrNode->name);
         }
 
@@ -409,7 +453,7 @@ class Element implements
     {
         $this->removeAllChildren();
 
-        $fragment = $this->element->ownerDocument->createDocumentFragment();
+        $fragment = $this->getDomDocument()->createDocumentFragment();
         $fragment->appendXml($inner);
         $this->element->appendChild($fragment);
 
@@ -424,7 +468,7 @@ class Element implements
         $output = '';
 
         foreach ($this->element->childNodes as $child) {
-            $output .= $this->element->ownerDocument->saveXML($child);
+            $output .= $this->getDomDocument()->saveXML($child);
         }
 
         return $output;
@@ -449,7 +493,7 @@ class Element implements
     {
         $this->removeAllChildren();
 
-        $text = $this->element->ownerDocument->createTextNode($content);
+        $text = $this->getDomDocument()->createTextNode($content);
         $this->element->appendChild($text);
 
         return $this;
@@ -468,7 +512,7 @@ class Element implements
      */
     public function getComposedTextContent(): string
     {
-        $isRoot = $this->element === $this->element->ownerDocument->documentElement;
+        $isRoot = $this->element === $this->getDomDocument()->documentElement;
         $output = '';
 
         foreach ($this->element->childNodes as $node) {
@@ -476,7 +520,7 @@ class Element implements
 
             switch ($node->nodeType) {
                 case \XML_ELEMENT_NODE:
-                    $value = (new static($node))->getComposedTextContent();
+                    $value = $this->wrapDomNode($node)->getComposedTextContent();
 
                     if ($isRoot) {
                         $value .= "\n";
@@ -520,7 +564,7 @@ class Element implements
     {
         $this->removeAllChildren();
 
-        $content = $this->element->ownerDocument->createCDataSection($content);
+        $content = $this->getDomDocument()->createCDataSection($content);
         $this->element->appendChild($content);
 
         return $this;
@@ -531,7 +575,7 @@ class Element implements
      */
     public function prependCDataContent(string $content): Element
     {
-        $content = $this->element->ownerDocument->createCDataSection($content);
+        $content = $this->getDomDocument()->createCDataSection($content);
         $this->element->insertBefore($content, $this->element->firstChild);
 
         return $this;
@@ -542,7 +586,7 @@ class Element implements
      */
     public function appendCDataContent(string $content): Element
     {
-        $content = $this->element->ownerDocument->createCDataSection($content);
+        $content = $this->getDomDocument()->createCDataSection($content);
         $this->element->appendChild($content);
 
         return $this;
@@ -564,8 +608,10 @@ class Element implements
 
     /**
      * Scan all CDATA sections within node
+     *
+     * @return Traversable<string>
      */
-    public function scanAllCDataSections(): Generator
+    public function scanAllCDataSections(): Traversable
     {
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_CDATA_SECTION_NODE) {
@@ -576,6 +622,8 @@ class Element implements
 
     /**
      * Get all CDATA sections within node
+     *
+     * @return array<string>
      */
     public function getAllCDataSections(): array
     {
@@ -636,6 +684,8 @@ class Element implements
 
     /**
      * Get list of elements of type
+     *
+     * @return array<Element>
      */
     public function __get(string $name): array
     {
@@ -645,14 +695,18 @@ class Element implements
 
     /**
      * Scan all child elements
+     *
+     * @return Traversable<Element>
      */
-    public function scanChildren(): Generator
+    public function scanChildren(): Traversable
     {
         return $this->scanChildList();
     }
 
     /**
      * Get all child elements
+     *
+     * @return array<Element>
      */
     public function getChildren(): array
     {
@@ -685,14 +739,18 @@ class Element implements
 
     /**
      * Scan list of children by formula
+     *
+     * @return Traversable<Element>
      */
-    public function scanNthChildren(string $formula): Generator
+    public function scanNthChildren(string $formula): Traversable
     {
         return $this->scanNthChildList($formula);
     }
 
     /**
      * Get list of children by formula
+     *
+     * @return array<Element>
      */
     public function getNthChildren(string $formula): array
     {
@@ -701,14 +759,18 @@ class Element implements
 
     /**
      * Scan all children of type
+     *
+     * @return Traversable<Element>
      */
-    public function scanChildrenOfType(string $name): Generator
+    public function scanChildrenOfType(string $name): Traversable
     {
         return $this->scanChildList($name);
     }
 
     /**
      * Get all children of type
+     *
+     * @return array<Element>
      */
     public function getChildrenOfType(string $name): array
     {
@@ -741,14 +803,18 @@ class Element implements
 
     /**
      * Scan child of type by formula
+     *
+     * @return Traversable<Element>
      */
-    public function scanNthChildrenOfType(string $name, string $formula): Generator
+    public function scanNthChildrenOfType(string $name, string $formula): Traversable
     {
         return $this->scanNthChildList($formula, $name);
     }
 
     /**
      * Get child of type by formula
+     *
+     * @return array<Element>
      */
     public function getNthChildrenOfType(string $name, string $formula): array
     {
@@ -758,16 +824,21 @@ class Element implements
 
     /**
      * Shared child fetcher
+     *
+     * @return Traversable<Element>
      */
-    protected function scanChildList($name = null): Generator
+    protected function scanChildList(?string $name = null): Traversable
     {
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_ELEMENT_NODE) {
-                if ($name !== null && $node->nodeName != $name) {
+                if (
+                    $name !== null &&
+                    $node->nodeName != $name
+                ) {
                     continue;
                 }
 
-                yield new static($node);
+                yield $this->wrapDomNode($node);
             }
         }
     }
@@ -775,15 +846,18 @@ class Element implements
     /**
      * Get first element in list
      */
-    protected function getFirstChildNode(string $name = null): ?Element
+    protected function getFirstChildNode(?string $name = null): ?Element
     {
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_ELEMENT_NODE) {
-                if ($name !== null && $node->nodeName != $name) {
+                if (
+                    $name !== null &&
+                    $node->nodeName != $name
+                ) {
                     continue;
                 }
 
-                return new static($node);
+                return $this->wrapDomNode($node);
             }
         }
 
@@ -793,13 +867,16 @@ class Element implements
     /**
      * Get last element in list
      */
-    protected function getLastChildNode(string $name = null): ?Element
+    protected function getLastChildNode(?string $name = null): ?Element
     {
         $lastElement = null;
 
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_ELEMENT_NODE) {
-                if ($name !== null && $node->nodeName != $name) {
+                if (
+                    $name !== null &&
+                    $node->nodeName != $name
+                ) {
                     continue;
                 }
 
@@ -808,7 +885,7 @@ class Element implements
         }
 
         if ($lastElement !== null) {
-            return new static($lastElement);
+            return $this->wrapDomNode($lastElement);
         } else {
             return null;
         }
@@ -817,7 +894,7 @@ class Element implements
     /**
      * Get child at index
      */
-    protected function getNthChildNode(int $index, string $name = null): ?Element
+    protected function getNthChildNode(int $index, ?string $name = null): ?Element
     {
         if ($index < 1) {
             throw Exceptional::InvalidArgument(
@@ -827,14 +904,17 @@ class Element implements
 
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_ELEMENT_NODE) {
-                if ($name !== null && $node->nodeName != $name) {
+                if (
+                    $name !== null &&
+                    $node->nodeName != $name
+                ) {
                     continue;
                 }
 
                 $index--;
 
                 if ($index == 0) {
-                    return new static($node);
+                    return $this->wrapDomNode($node);
                 }
             }
         }
@@ -844,8 +924,10 @@ class Element implements
 
     /**
      * Get children by formula
+     *
+     * @return Traversable<Element>
      */
-    protected function scanNthChildList(string $formula, string $name = null): Generator
+    protected function scanNthChildList(string $formula, string $name = null): Traversable
     {
         if (is_numeric($formula)) {
             if ($output = $this->getNthChildNode((int)$formula, $name)) {
@@ -879,20 +961,47 @@ class Element implements
 
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_ELEMENT_NODE) {
-                if ($name !== null && $node->nodeName != $name) {
+                if (
+                    $name !== null &&
+                    $node->nodeName != $name
+                ) {
                     continue;
                 }
 
                 $i++;
 
                 if ($i % $mod == $offset) {
-                    yield new static($node);
+                    yield $this->wrapDomNode($node);
                 }
             }
         }
     }
 
 
+
+    /**
+     * Wrap DOMNode as Element
+     */
+    protected static function wrapDomNode(DOMNode $node): Element
+    {
+        if (!$node instanceof DOMElement) {
+            throw Exceptional::UnexpectedValue('Node is not an element', null, $node);
+        }
+
+        return new static($node);
+    }
+
+    /**
+     * Wrap DOMNode as Element or null
+     */
+    protected static function wrapNullableDomNode(?DOMNode $node): ?Element
+    {
+        if (!$node instanceof DOMElement) {
+            return null;
+        }
+
+        return new static($node);
+    }
 
 
 
@@ -924,44 +1033,52 @@ class Element implements
 
     /**
      * Add child to end of node
+     *
+     * @param Element|string $newChild
      */
-    public function prependChild($newChild, $value = null): Element
+    public function prependChild($newChild, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($newChild, $value);
         $node = $this->element->insertBefore($node, $this->element->firstChild);
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
      * Add child to start of node
+     *
+     * @param Element|string $newChild
      */
-    public function appendChild($newChild, $value = null): Element
+    public function appendChild($newChild, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($newChild, $value);
         $this->element->appendChild($node);
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
      * Replace child node in place
+     *
+     * @param Element|string $newChild
      */
-    public function replaceChild(Element $origChild, $newChild, $value = null): Element
+    public function replaceChild(Element $origChild, $newChild, ?string $value = null): Element
     {
         $origChild = $origChild->getDomElement();
         $node = $this->normalizeInputChild($newChild, $value);
         $this->element->replaceChild($node, $origChild);
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
      * Add child at index
+     *
+     * @param Element|string $newChild
      */
-    public function putChild(int $index, $child, $value = null): Element
+    public function putChild(int $index, $newChild, ?string $value = null): Element
     {
-        $newNode = $this->normalizeInputChild($child, $value);
+        $newNode = $this->normalizeInputChild($newChild, $value);
         $origIndex = $index;
         $count = $this->count();
         $i = 0;
@@ -995,25 +1112,29 @@ class Element implements
             }
         }
 
-        return new static($newNode);
+        return $this->wrapDomNode($newNode);
     }
 
     /**
      * Add child node before chosen node
+     *
+     * @param Element|string $newChild
      */
-    public function insertChildBefore(Element $origChild, $newChild, $value = null): Element
+    public function insertChildBefore(Element $origChild, $newChild, ?string $value = null): Element
     {
         $origChild = $origChild->getDomElement();
         $node = $this->normalizeInputChild($newChild, $value);
         $this->element->insertBefore($node, $origChild);
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
      * Add child node after chosen node
+     *
+     * @param Element|string $newChild
      */
-    public function insertChildAfter(Element $origChild, $newChild, $value = null): Element
+    public function insertChildAfter(Element $origChild, $newChild, ?string $value = null): Element
     {
         $origChild = $origChild->getDomElement();
 
@@ -1038,7 +1159,7 @@ class Element implements
             $this->element->insertBefore($node, $origChild);
         }
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
@@ -1075,11 +1196,7 @@ class Element implements
      */
     public function getParent(): ?Element
     {
-        if (!$this->element->parentNode) {
-            return null;
-        }
-
-        return new static($this->element->parentNode);
+        return $this->wrapNullableDomNode($this->element->parentNode);
     }
 
     /**
@@ -1147,11 +1264,7 @@ class Element implements
             }
         }
 
-        if (!$node instanceof DOMElement) {
-            return null;
-        }
-
-        return new static($node);
+        return $this->wrapNullableDomNode($node);
     }
 
     /**
@@ -1167,29 +1280,29 @@ class Element implements
             }
         }
 
-        if (!$node instanceof DOMElement) {
-            return null;
-        }
-
-        return new static($node);
+        return $this->wrapNullableDomNode($node);
     }
 
 
     /**
      * Insert sibling before this node
+     *
+     * @param Element|string $sibling
      */
-    public function insertBefore($sibling, $value = null): Element
+    public function insertBefore($sibling, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($sibling, $value);
-        $node = $this->element->parentNode->insertBefore($node, $this->element);
+        $node = $this->getParentDomElement()->insertBefore($node, $this->element);
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
      * Insert sibling after this node
+     *
+     * @param Element|string $sibling
      */
-    public function insertAfter($sibling, $value = null): Element
+    public function insertAfter($sibling, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($sibling, $value);
 
@@ -1200,21 +1313,23 @@ class Element implements
         } while ($target && $target->nodeType != \XML_ELEMENT_NODE);
 
         if (!$target) {
-            $node = $this->element->parentNode->appendChild($node);
+            $node = $this->getParentDomElement()->appendChild($node);
         } else {
-            $node = $this->element->parentNode->insertBefore($node, $target);
+            $node = $this->getParentDomElement()->insertBefore($node, $target);
         }
 
-        return new static($node);
+        return $this->wrapDomNode($node);
     }
 
     /**
      * Replace this node with another
+     *
+     * @param Element|string $sibling
      */
-    public function replaceWith($sibling, $value = null): Element
+    public function replaceWith($sibling, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($sibling, $value);
-        $this->element->parentNode->replaceChild($node, $this->element);
+        $this->getParentDomElement()->replaceChild($node, $this->element);
         $this->element = $node;
 
         return $this;
@@ -1228,9 +1343,11 @@ class Element implements
      */
     public function getPrecedingComment(): ?string
     {
-        if ($this->element->previousSibling
-        && $this->element->previousSibling->nodeType == \XML_COMMENT_NODE) {
-            return trim($this->element->previousSibling->data);
+        if (
+            $this->element->previousSibling &&
+            $this->element->previousSibling->nodeType == \XML_COMMENT_NODE
+        ) {
+            return $this->exportComment($this->element->previousSibling);
         }
 
         return null;
@@ -1238,23 +1355,41 @@ class Element implements
 
     /**
      * Scan all comments in node
+     *
+     * @return Traversable<string>
      */
-    public function scanAllComments(): Generator
+    public function scanAllComments(): Traversable
     {
         foreach ($this->element->childNodes as $node) {
             if ($node->nodeType == \XML_COMMENT_NODE) {
-                yield trim($node->data);
+                yield $this->exportComment($node);
             }
         }
     }
 
     /**
      * Get all comments in node
+     *
+     * @return array<string>
      */
     public function getAllComments(): array
     {
         return iterator_to_array($this->scanAllComments());
     }
+
+
+    /**
+     * Export comment content
+     */
+    protected function exportComment(DOMNode $node): string
+    {
+        if (!$node instanceof DOMComment) {
+            return '';
+        }
+
+        return trim($node->data);
+    }
+
 
 
 
@@ -1268,16 +1403,20 @@ class Element implements
 
     /**
      * Scan all nodes of type
+     *
+     * @return Traversable<Element>
      */
-    public function scanByType(string $type): Generator
+    public function scanByType(string $type): Traversable
     {
-        foreach ($this->element->ownerDocument->getElementsByTagName($type) as $node) {
-            yield new static($node);
+        foreach ($this->getDomDocument()->getElementsByTagName($type) as $node) {
+            yield $this->wrapDomNode($node);
         }
     }
 
     /**
      * Get all nodes of type
+     *
+     * @return array<Element>
      */
     public function getByType(string $type): array
     {
@@ -1286,10 +1425,12 @@ class Element implements
 
     /**
      * Scan all nodes by attribute
+     *
+     * @return Traversable<Element>
      */
-    public function scanByAttribute(string $name, $value = null): Generator
+    public function scanByAttribute(string $name, ?string $value = null): Traversable
     {
-        if ($value == '') {
+        if ($value === null) {
             $path = '//*[@' . $name . ']';
         } else {
             $path = '//*[@' . $name . '=\'' . $value . '\']';
@@ -1300,8 +1441,10 @@ class Element implements
 
     /**
      * Get all nodes by attribute
+     *
+     * @return array<Element>
      */
-    public function getByAttribute(string $name, $value = null): array
+    public function getByAttribute(string $name, ?string $value = null): array
     {
         return iterator_to_array($this->scanByAttribute($name, $value));
     }
@@ -1309,18 +1452,26 @@ class Element implements
 
     /**
      * Scan nodes matching xPath
+     *
+     * @return Traversable<Element>
      */
-    public function scanXPath(string $path): Generator
+    public function scanXPath(string $path): Traversable
     {
-        $xpath = new DOMXPath($this->element->ownerDocument);
+        $xpath = new DOMXPath($this->getDomDocument());
 
-        foreach ($xpath->query($path, $this->element) as $node) {
-            yield new static($node);
+        if (!$result = $xpath->query($path, $this->element)) {
+            return;
+        }
+
+        foreach ($result as $node) {
+            yield $this->wrapDomNode($node);
         }
     }
 
     /**
      * Get nodes matching xPath
+     *
+     * @return array<Element>
      */
     public function getXPath(string $path): array
     {
@@ -1332,14 +1483,13 @@ class Element implements
      */
     public function firstXPath(string $path): ?Element
     {
-        $xpath = new DOMXPath($this->element->ownerDocument);
-        $output = $xpath->query($path, $this->element)->item(0);
+        $xpath = new DOMXPath($this->getDomDocument());
 
-        if (!$output || !$output instanceof DOMElement) {
+        if (!$result = $xpath->query($path, $this->element)) {
             return null;
         }
 
-        return new static($output);
+        return $this->wrapNullableDomNode($result->item(0));
     }
 
 
@@ -1348,7 +1498,7 @@ class Element implements
      */
     public function setXmlVersion(string $version): Element
     {
-        $this->element->ownerDocument->xmlVersion = $version;
+        $this->getDomDocument()->xmlVersion = $version;
         return $this;
     }
 
@@ -1357,7 +1507,7 @@ class Element implements
      */
     public function getXmlVersion(): string
     {
-        return $this->element->ownerDocument->xmlVersion;
+        return $this->getDomDocument()->xmlVersion;
     }
 
     /**
@@ -1365,7 +1515,7 @@ class Element implements
      */
     public function setDocumentEncoding(string $encoding): Element
     {
-        $this->element->ownerDocument->xmlEncoding = $encoding;
+        $this->getDomDocument()->xmlEncoding = $encoding;
         return $this;
     }
 
@@ -1374,7 +1524,7 @@ class Element implements
      */
     public function getDocumentEncoding(): string
     {
-        return $this->element->ownerDocument->xmlEncoding;
+        return $this->getDomDocument()->xmlEncoding;
     }
 
     /**
@@ -1382,7 +1532,7 @@ class Element implements
      */
     public function setDocumentStandalone(bool $flag): Element
     {
-        $this->element->ownerDocument->xmlStandalone = $flag;
+        $this->getDomDocument()->xmlStandalone = $flag;
         return $this;
     }
 
@@ -1391,7 +1541,7 @@ class Element implements
      */
     public function isDocumentStandalone(): bool
     {
-        return (bool)$this->element->ownerDocument->xmlStandalone;
+        return (bool)$this->getDomDocument()->xmlStandalone;
     }
 
     /**
@@ -1399,7 +1549,7 @@ class Element implements
      */
     public function normalizeDocument(): Element
     {
-        $this->element->ownerDocument->normalizeDocument();
+        $this->getDomDocument()->normalizeDocument();
         return $this;
     }
 
@@ -1410,7 +1560,7 @@ class Element implements
      */
     public function getDomDocument(): DOMDocument
     {
-        return $this->element->ownerDocument;
+        return static::extractOwnerDocument($this->element);
     }
 
     /**
@@ -1422,20 +1572,40 @@ class Element implements
     }
 
     /**
-     * Ensure input is DomElement
+     * Get parent dom element
      */
-    protected function normalizeInputChild($child, $value = null): DOMElement
+    public function getParentDomElement(): DOMElement
+    {
+        if ($this->element->parentNode === null) {
+            throw Exceptional::UnexpectedValue('Element has no parent node', null, $this->element);
+        }
+
+        return $this->element->parentNode;
+    }
+
+    /**
+     * Ensure input is DomElement
+     *
+     * @param Element|string $child
+     */
+    protected function normalizeInputChild($child, ?string $value = null): DOMElement
     {
         $node = null;
 
         if ($child instanceof Element) {
             $node = $child->getDOMElement();
+        } else {
+            $child = (string)$child;
         }
 
         if ($node instanceof DOMElement) {
-            $node = $this->element->ownerDocument->importNode($node, true);
+            $node = $this->getDomDocument()->importNode($node, true);
         } else {
-            $node = $this->element->ownerDocument->createElement((string)$child, $value);
+            $node = $this->getDomDocument()->createElement($child, (string)$value);
+        }
+
+        if (!$node instanceof DOMElement) {
+            throw Exceptional::UnexpectedValue('Node is not an element', null, $node);
         }
 
         return $node;
@@ -1447,7 +1617,13 @@ class Element implements
      */
     public function __toString(): string
     {
-        return $this->element->ownerDocument->saveXML($this->element);
+        $output = $this->getDomDocument()->saveXML($this->element);
+
+        if ($output === false) {
+            $output = '';
+        }
+
+        return $output;
     }
 
     /**
@@ -1455,7 +1631,13 @@ class Element implements
      */
     public function documentToString(): string
     {
-        return $this->element->ownerDocument->saveXML();
+        $output = $this->getDomDocument()->saveXML();
+
+        if ($output === false) {
+            $output = '';
+        }
+
+        return $output;
     }
 
 
@@ -1464,7 +1646,7 @@ class Element implements
      */
     public function toXmlString(bool $embedded = false): string
     {
-        $isRoot = $this->element === $this->element->ownerDocument->documentElement;
+        $isRoot = $this->element === $this->getDomDocument()->documentElement;
 
         if ($isRoot && !$embedded) {
             return $this->documentToString();
@@ -1487,7 +1669,7 @@ class Element implements
         $dir = dirname($path);
         Atlas::$fs->createDir($dir);
 
-        $this->element->ownerDocument->save($path);
+        $this->getDomDocument()->save($path);
         return Atlas::$fs->file($path);
     }
 
@@ -1510,14 +1692,20 @@ class Element implements
 
     /**
      * Shortcut to set attribute
+     *
+     * @param string $key
+     * @param mixed $value
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
         $this->setAttribute($key, $value);
     }
 
     /**
      * Shortcut to get attribute
+     *
+     * @param string $key
+     * @return mixed
      */
     public function offsetGet($key)
     {
@@ -1526,16 +1714,20 @@ class Element implements
 
     /**
      * Shortcut to test for attribute
+     *
+     * @param string $key
      */
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return $this->hasAttribute($key);
     }
 
     /**
      * Shortcut to remove attribute
+     *
+     * @param string $key
      */
-    public function offsetUnset($key)
+    public function offsetUnset($key): void
     {
         $this->removeAttribute($key);
     }
@@ -1543,11 +1735,23 @@ class Element implements
 
     /**
      * Dump inner xml
+     *
+     * @return array<string, string>
      */
     public function __debugInfo(): array
     {
         return [
             'xml' => $this->__toString()
         ];
+    }
+
+    /**
+     * Export for dump inspection
+     *
+     * @return iterable<string, mixed>
+     */
+    public function glitchDump(): iterable
+    {
+        yield 'text' => $this->__toString();
     }
 }

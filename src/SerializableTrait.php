@@ -18,8 +18,11 @@ trait SerializableTrait
 {
     /**
      * Create from any xml type
+     *
+     * @param mixed $xml
+     * @return static
      */
-    public static function fromXml($xml)
+    public static function fromXml($xml): Consumer
     {
         if ($xml instanceof self) {
             return $xml;
@@ -44,24 +47,30 @@ trait SerializableTrait
 
     /**
      * Load object from xml file
+     *
+     * @return static
      */
-    public static function fromXmlFile(string $path)
+    public static function fromXmlFile(string $path): Consumer
     {
         return static::fromXmlElement(Element::fromXmlFile($path));
     }
 
     /**
      * Load object from xml string
+     *
+     * @return static
      */
-    public static function fromXmlString(string $xml)
+    public static function fromXmlString(string $xml): Consumer
     {
         return static::fromXmlElement(Element::fromXmlString($xml));
     }
 
     /**
      * Load object using xmlUnserialize as constructor
+     *
+     * @return static
      */
-    public static function fromXmlElement(Element $element)
+    public static function fromXmlElement(Element $element): Consumer
     {
         $class = get_called_class();
         $ref = new ReflectionClass($class);
