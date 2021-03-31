@@ -47,8 +47,10 @@ class Element implements
      * Create from any xml type
      *
      * @param mixed $xml
+     *
+     * @return static|self
      */
-    public static function fromXml($xml): Element
+    public static function fromXml($xml): Consumer
     {
         if ($xml instanceof Element) {
             return $xml;
@@ -96,8 +98,10 @@ class Element implements
 
     /**
      * Create instance from XML file
+     *
+     * @return static|self
      */
-    public static function fromXmlFile(string $path): Element
+    public static function fromXmlFile(string $path): Consumer
     {
         try {
             $document = static::newDomDocument();
@@ -125,8 +129,10 @@ class Element implements
 
     /**
      * Create instance from XML string
+     *
+     * @return static|self
      */
-    public static function fromXmlString(string $xml): Element
+    public static function fromXmlString(string $xml): Consumer
     {
         $xml = trim($xml);
 
@@ -184,8 +190,10 @@ class Element implements
 
     /**
      * Passthrough
+     *
+     * @return static|self
      */
-    public static function fromXmlElement(Element $element): Element
+    public static function fromXmlElement(Element $element): Consumer
     {
         return $element;
     }
@@ -576,7 +584,12 @@ class Element implements
     public function prependCDataContent(string $content): Element
     {
         $content = $this->getDomDocument()->createCDataSection($content);
-        $this->element->insertBefore($content, $this->element->firstChild);
+
+        if ($this->element->firstChild !== null) {
+            $this->element->insertBefore($content, $this->element->firstChild);
+        } else {
+            $this->element->appendChild($content);
+        }
 
         return $this;
     }
@@ -1039,7 +1052,12 @@ class Element implements
     public function prependChild($newChild, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($newChild, $value);
-        $node = $this->element->insertBefore($node, $this->element->firstChild);
+
+        if ($this->element->firstChild !== null) {
+            $node = $this->element->insertBefore($node, $this->element->firstChild);
+        } else {
+            $node = $this->element->appendChild($node);
+        }
 
         return $this->wrapDomNode($node);
     }
@@ -1052,7 +1070,7 @@ class Element implements
     public function appendChild($newChild, ?string $value = null): Element
     {
         $node = $this->normalizeInputChild($newChild, $value);
-        $this->element->appendChild($node);
+        $node = $this->element->appendChild($node);
 
         return $this->wrapDomNode($node);
     }
@@ -1094,7 +1112,11 @@ class Element implements
         }
 
         if ($index === 0) {
-            $newNode = $this->element->insertBefore($newNode, $this->element->firstChild);
+            if ($this->element->firstChild !== null) {
+                $newNode = $this->element->insertBefore($newNode, $this->element->firstChild);
+            } else {
+                $newNode = $this->element->appendChild($newNode);
+            }
         } elseif ($index >= $count) {
             $newNode = $this->element->appendChild($newNode);
         } else {
@@ -1124,7 +1146,7 @@ class Element implements
     {
         $origChild = $origChild->getDomElement();
         $node = $this->normalizeInputChild($newChild, $value);
-        $this->element->insertBefore($node, $origChild);
+        $node = $this->element->insertBefore($node, $origChild);
 
         return $this->wrapDomNode($node);
     }
@@ -1154,9 +1176,9 @@ class Element implements
         $node = $this->normalizeInputChild($newChild, $value);
 
         if ($origChild === null) {
-            $this->element->appendChild($node);
+            $node = $this->element->appendChild($node);
         } else {
-            $this->element->insertBefore($node, $origChild);
+            $node = $this->element->insertBefore($node, $origChild);
         }
 
         return $this->wrapDomNode($node);
