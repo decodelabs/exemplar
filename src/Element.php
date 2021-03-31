@@ -47,8 +47,10 @@ class Element implements
      * Create from any xml type
      *
      * @param mixed $xml
+     *
+     * @return static|self
      */
-    public static function fromXml($xml): Element
+    public static function fromXml($xml): Consumer
     {
         if ($xml instanceof Element) {
             return $xml;
@@ -96,8 +98,10 @@ class Element implements
 
     /**
      * Create instance from XML file
+     *
+     * @return static|self
      */
-    public static function fromXmlFile(string $path): Element
+    public static function fromXmlFile(string $path): Consumer
     {
         try {
             $document = static::newDomDocument();
@@ -125,8 +129,10 @@ class Element implements
 
     /**
      * Create instance from XML string
+     *
+     * @return static|self
      */
-    public static function fromXmlString(string $xml): Element
+    public static function fromXmlString(string $xml): Consumer
     {
         $xml = trim($xml);
 
@@ -184,8 +190,10 @@ class Element implements
 
     /**
      * Passthrough
+     *
+     * @return static|self
      */
-    public static function fromXmlElement(Element $element): Element
+    public static function fromXmlElement(Element $element): Consumer
     {
         return $element;
     }
