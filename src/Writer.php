@@ -766,14 +766,14 @@ class Writer implements
         $this->finalize();
 
         if ($path === $this->path) {
-            return Atlas::$fs->file($this->path);
+            return Atlas::file($this->path);
         }
 
         if ($this->path !== null) {
-            return Atlas::$fs->copyFile($this->path, $path);
+            return Atlas::copyFile($this->path, $path);
         }
 
-        return Atlas::$fs->createFile($path, $this->__toString());
+        return Atlas::createFile($path, $this->__toString());
     }
 
     /**

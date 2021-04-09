@@ -1689,10 +1689,10 @@ class Element implements
         }
 
         $dir = dirname($path);
-        Atlas::$fs->createDir($dir);
+        Atlas::createDir($dir);
 
         $this->getDomDocument()->save($path);
-        return Atlas::$fs->file($path);
+        return Atlas::file($path);
     }
 
     /**
