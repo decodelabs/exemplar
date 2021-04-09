@@ -1,3 +1,6 @@
+## v0.2.0 (2021-04-09)
+* Updated Atlas dependency
+
 ## v0.1.1 (2021-04-07)
 * Updated Collections
 
