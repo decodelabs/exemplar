@@ -157,6 +157,8 @@ class Writer implements
 
     /**
      * Write initial XML header
+     *
+     * @return $this
      */
     public function writeHeader(string $version = '1.0', string $encoding = 'UTF-8', bool $standalone = false): Writer
     {
@@ -182,6 +184,8 @@ class Writer implements
 
     /**
      * Write full DTD
+     *
+     * @return $this
      */
     public function writeDtd(string $name, string $publicId = null, string $systemId = null, string $subset = null): Writer
     {
@@ -207,6 +211,8 @@ class Writer implements
 
     /**
      * Write DTD attlist
+     *
+     * @return $this
      */
     public function writeDtdAttlist(string $name, string $content): Writer
     {
@@ -232,6 +238,8 @@ class Writer implements
 
     /**
      * Write DTD element
+     *
+     * @return $this
      */
     public function writeDtdElement(string $name, string $content): Writer
     {
@@ -257,6 +265,8 @@ class Writer implements
 
     /**
      * Write DTD entity
+     *
+     * @return $this
      */
     public function writeDtdEntity(string $name, string $content, bool $isParam, string $publicId, string $systemId, string $nDataId): Writer
     {
@@ -313,6 +323,7 @@ class Writer implements
      * Open element to write into
      *
      * @param array<string, mixed>|null $attributes
+     * @return $this
      */
     public function startElement(string $name, array $attributes = null): Writer
     {
@@ -393,6 +404,8 @@ class Writer implements
 
     /**
      * Complete writing current element
+     *
+     * @return $this
      */
     public function endElement(): Writer
     {
@@ -423,6 +436,7 @@ class Writer implements
      * Store element content ready for writing
      *
      * @param mixed $content
+     * @return $this
      */
     public function setElementContent($content): Writer
     {
@@ -488,6 +502,8 @@ class Writer implements
 
     /**
      * Start new CDATA section
+     *
+     * @return $this
      */
     public function startCData(): Writer
     {
@@ -499,6 +515,8 @@ class Writer implements
 
     /**
      * Write content for CDATA section
+     *
+     * @return $this
      */
     public function writeCDataContent(?string $content): Writer
     {
@@ -513,6 +531,8 @@ class Writer implements
 
     /**
      * Finalize CDATA section
+     *
+     * @return $this
      */
     public function endCData(): Writer
     {
@@ -538,6 +558,8 @@ class Writer implements
 
     /**
      * Begin comment node
+     *
+     * @return $this
      */
     public function startComment(): Writer
     {
@@ -549,6 +571,8 @@ class Writer implements
 
     /**
      * Write comment body
+     *
+     * @return $this
      */
     public function writeCommentContent(?string $comment): Writer
     {
@@ -563,6 +587,8 @@ class Writer implements
 
     /**
      * Finalize comment node
+     *
+     * @return $this
      */
     public function endComment(): Writer
     {
@@ -588,6 +614,8 @@ class Writer implements
 
     /**
      * Begin PI node
+     *
+     * @return $this
      */
     public function startPi(string $target): Writer
     {
@@ -599,6 +627,8 @@ class Writer implements
 
     /**
      * Write PI content
+     *
+     * @return $this
      */
     public function writePiContent(?string $content): Writer
     {
@@ -614,6 +644,8 @@ class Writer implements
 
     /**
      * Finalize PI
+     *
+     * @return $this
      */
     public function endPi(): Writer
     {
@@ -632,6 +664,8 @@ class Writer implements
 
     /**
      * Set list of attribute names to be written raw
+     *
+     * @return $this
      */
     public function setRawAttributeNames(string ...$names): Writer
     {
@@ -653,6 +687,8 @@ class Writer implements
 
     /**
      * Write directly to XML buffer
+     *
+     * @return $this
      */
     public function writeRaw(?string $content): Writer
     {
@@ -715,6 +751,8 @@ class Writer implements
 
     /**
      * Ensure everything is written to buffer
+     *
+     * @return $this
      */
     public function finalize(): Writer
     {

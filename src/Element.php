@@ -257,6 +257,8 @@ class Element implements
 
     /**
      * Replace this node element with a new tag
+     *
+     * @return $this
      */
     public function setTagName(string $name): Element
     {
@@ -296,6 +298,7 @@ class Element implements
      * Merge attributes on node
      *
      * @param array<string, mixed> $attributes
+     * @return $this
      */
     public function setAttributes(array $attributes): AttributeContainer
     {
@@ -320,6 +323,7 @@ class Element implements
      * Set attribute on node
      *
      * @param mixed $value
+     * @return $this
      */
     public function setAttribute(string $key, $value): AttributeContainer
     {
@@ -389,6 +393,8 @@ class Element implements
 
     /**
      * Remove attribute list
+     *
+     * @return $this
      */
     public function removeAttribute(string ...$keys): AttributeContainer
     {
@@ -441,6 +447,8 @@ class Element implements
 
     /**
      * Remove all attributes
+     *
+     * @return $this
      */
     public function clearAttributes(): AttributeContainer
     {
@@ -456,6 +464,8 @@ class Element implements
 
     /**
      * Set inner XML string
+     *
+     * @return $this
      */
     public function setInnerXml(string $inner): Element
     {
@@ -496,6 +506,8 @@ class Element implements
 
     /**
      * Replace contents with text
+     *
+     * @return $this
      */
     public function setTextContent(string $content): Element
     {
@@ -567,6 +579,8 @@ class Element implements
 
     /**
      * Replace node content with CDATA
+     *
+     * @return $this
      */
     public function setCDataContent(string $content): Element
     {
@@ -580,6 +594,8 @@ class Element implements
 
     /**
      * Add CDATA section to end of node
+     *
+     * @return $this
      */
     public function prependCDataContent(string $content): Element
     {
@@ -596,6 +612,8 @@ class Element implements
 
     /**
      * Add CDATA section to start of node
+     *
+     * @return $this
      */
     public function appendCDataContent(string $content): Element
     {
@@ -1186,6 +1204,8 @@ class Element implements
 
     /**
      * Remove child node
+     *
+     * @return $this
      */
     public function removeChild(Element $child): Element
     {
@@ -1196,6 +1216,8 @@ class Element implements
 
     /**
      * Clear all children from node
+     *
+     * @return $this
      */
     public function removeAllChildren(): Element
     {
@@ -1347,6 +1369,7 @@ class Element implements
      * Replace this node with another
      *
      * @param Element|string $sibling
+     * @return $this
      */
     public function replaceWith($sibling, ?string $value = null): Element
     {
@@ -1517,6 +1540,8 @@ class Element implements
 
     /**
      * Set XML document version
+     *
+     * @return $this
      */
     public function setXmlVersion(string $version): Element
     {
@@ -1534,6 +1559,8 @@ class Element implements
 
     /**
      * Set XML document encoding
+     *
+     * @return $this
      */
     public function setDocumentEncoding(string $encoding): Element
     {
@@ -1551,6 +1578,8 @@ class Element implements
 
     /**
      * Set document as standalone
+     *
+     * @return $this
      */
     public function setDocumentStandalone(bool $flag): Element
     {
@@ -1568,6 +1597,8 @@ class Element implements
 
     /**
      * Normalize XML document
+     *
+     * @return $this
      */
     public function normalizeDocument(): Element
     {
