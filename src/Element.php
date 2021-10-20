@@ -1554,7 +1554,7 @@ class Element implements
      */
     public function getXmlVersion(): string
     {
-        return $this->getDomDocument()->xmlVersion;
+        return $this->getDomDocument()->xmlVersion ?? '1.0';
     }
 
     /**
@@ -1573,7 +1573,7 @@ class Element implements
      */
     public function getDocumentEncoding(): string
     {
-        return $this->getDomDocument()->xmlEncoding;
+        return $this->getDomDocument()->xmlEncoding ?? 'UTF-8';
     }
 
     /**
