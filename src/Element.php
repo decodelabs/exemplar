@@ -14,10 +14,12 @@ use Countable;
 
 use DecodeLabs\Atlas;
 use DecodeLabs\Atlas\File;
+use DecodeLabs\Coercion;
 use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
 
+use DOMAttr;
 use DOMComment;
 use DOMDocument;
 use DOMElement;
@@ -267,6 +269,7 @@ class Element implements
         $children = [];
 
         foreach ($this->element->childNodes as $child) {
+            /** @var DOMNode $child */
             $children[] = $document->importNode($child, true);
         }
 
@@ -275,6 +278,7 @@ class Element implements
         }
 
         foreach ($this->element->attributes ?? [] as $attrNode) {
+            /** @var DOMAttr $attrNode */
             $document->importNode($attrNode, true);
             $newNode->setAttributeNode($attrNode);
         }
@@ -327,7 +331,10 @@ class Element implements
      */
     public function setAttribute(string $key, $value): AttributeContainer
     {
-        $this->element->setAttribute($key, $value);
+        $this->element->setAttribute(
+            $key,
+            Coercion::forceString($value)
+        );
         return $this;
     }
 
@@ -341,6 +348,7 @@ class Element implements
         $output = [];
 
         foreach ($this->element->attributes ?? [] as $attrNode) {
+            /** @var DOMAttr $attrNode */
             $output[(string)$attrNode->name] = $attrNode->value;
         }
 
@@ -453,6 +461,7 @@ class Element implements
     public function clearAttributes(): AttributeContainer
     {
         foreach ($this->element->attributes ?? [] as $attrNode) {
+            /** @var DOMAttr $attrNode */
             $this->element->removeAttribute($attrNode->name);
         }
 
@@ -486,6 +495,7 @@ class Element implements
         $output = '';
 
         foreach ($this->element->childNodes as $child) {
+            /** @var DOMNode $child */
             $output .= $this->getDomDocument()->saveXML($child);
         }
 
@@ -535,6 +545,7 @@ class Element implements
         $isRoot = $this->element === $this->getDomDocument()->documentElement;
         $output = '';
 
+        /** @var DOMNode $node */
         foreach ($this->element->childNodes as $node) {
             $value = null;
 
@@ -629,6 +640,7 @@ class Element implements
     public function getFirstCDataSection(): ?string
     {
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_CDATA_SECTION_NODE) {
                 return $node->nodeValue;
             }
@@ -645,6 +657,7 @@ class Element implements
     public function scanAllCDataSections(): Traversable
     {
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_CDATA_SECTION_NODE) {
                 yield $node->nodeValue;
             }
@@ -670,6 +683,7 @@ class Element implements
         $output = 0;
 
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 $output++;
             }
@@ -686,8 +700,11 @@ class Element implements
         $output = 0;
 
         foreach ($this->element->childNodes as $node) {
-            if ($node->nodeType == \XML_ELEMENT_NODE
-            && $node->nodeName == $name) {
+            /** @var DOMNode $node */
+            if (
+                $node->nodeType == \XML_ELEMENT_NODE &&
+                $node->nodeName == $name
+            ) {
                 $output++;
             }
         }
@@ -705,6 +722,7 @@ class Element implements
         }
 
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 return true;
             }
@@ -861,6 +879,7 @@ class Element implements
     protected function scanChildList(?string $name = null): Traversable
     {
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -880,6 +899,7 @@ class Element implements
     protected function getFirstChildNode(?string $name = null): ?Element
     {
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -903,6 +923,7 @@ class Element implements
         $lastElement = null;
 
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -934,6 +955,7 @@ class Element implements
         }
 
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -991,6 +1013,7 @@ class Element implements
         $i = 0;
 
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -1139,6 +1162,7 @@ class Element implements
             $newNode = $this->element->appendChild($newNode);
         } else {
             foreach ($this->element->childNodes as $node) {
+                /** @var DOMNode $node */
                 if (!$node->nodeType == \XML_ELEMENT_NODE) {
                     continue;
                 }
@@ -1224,6 +1248,7 @@ class Element implements
         $queue = [];
 
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             $queue[] = $node;
         }
 
@@ -1255,6 +1280,7 @@ class Element implements
         $output = -1;
 
         foreach ($this->element->parentNode->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 $output++;
             }
@@ -1282,6 +1308,7 @@ class Element implements
         }
 
         foreach ($this->element->parentNode->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node === $this->element) {
                 continue;
             }
@@ -1406,6 +1433,7 @@ class Element implements
     public function scanAllComments(): Traversable
     {
         foreach ($this->element->childNodes as $node) {
+            /** @var DOMNode $node */
             if ($node->nodeType == \XML_COMMENT_NODE) {
                 yield $this->exportComment($node);
             }
@@ -1454,6 +1482,7 @@ class Element implements
     public function scanByType(string $type): Traversable
     {
         foreach ($this->getDomDocument()->getElementsByTagName($type) as $node) {
+            /** @var DOMNode $node */
             yield $this->wrapDomNode($node);
         }
     }
@@ -1509,6 +1538,7 @@ class Element implements
         }
 
         foreach ($result as $node) {
+            /** @var DOMNode $node */
             yield $this->wrapDomNode($node);
         }
     }
