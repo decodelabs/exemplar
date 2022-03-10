@@ -560,7 +560,7 @@ class Element implements
                     break;
 
                 case \XML_TEXT_NODE:
-                    $value = ltrim($node->nodeValue);
+                    $value = ltrim((string)$node->nodeValue);
 
                     if ($value != $node->nodeValue) {
                         $value = ' ' . $value;
@@ -575,7 +575,7 @@ class Element implements
                     break;
 
                 case \XML_CDATA_SECTION_NODE:
-                    $value = trim($node->nodeValue) . "\n";
+                    $value = trim((string)$node->nodeValue) . "\n";
                     break;
             }
 
@@ -659,7 +659,7 @@ class Element implements
         foreach ($this->element->childNodes as $node) {
             /** @var DOMNode $node */
             if ($node->nodeType == \XML_CDATA_SECTION_NODE) {
-                yield $node->nodeValue;
+                yield (string)$node->nodeValue;
             }
         }
     }
