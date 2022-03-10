@@ -12,6 +12,7 @@ namespace DecodeLabs\Exemplar;
 use ArrayAccess;
 use DecodeLabs\Atlas;
 use DecodeLabs\Atlas\File;
+use DecodeLabs\Coercion;
 use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Collections\AttributeContainerTrait;
 use DecodeLabs\Elementary\Markup;
@@ -31,13 +32,12 @@ class Writer implements
     ArrayAccess,
     Dumpable
 {
+    use AttributeContainerTrait;
     public const ELEMENT = 1;
     public const CDATA = 2;
     public const CDATA_ELEMENT = 3;
     public const COMMENT = 4;
     public const PI = 5;
-
-    use AttributeContainerTrait;
 
     /**
      * @var XMLWriter
@@ -465,7 +465,7 @@ class Writer implements
             return null;
         }
 
-        return (string)$content;
+        return Coercion::forceString($content);
     }
 
     /**

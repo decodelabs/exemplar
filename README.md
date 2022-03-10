@@ -1,13 +1,11 @@
 # Exemplar
 
-<!--
-[![PHP from Packagist](https://img.shields.io/packagist/php-v/decodelabs/exemplar?style=flat-square)](https://packagist.org/packages/decodelabs/exemplar)
-[![Latest Version](https://img.shields.io/packagist/v/decodelabs/exemplar.svg?style=flat-square)](https://packagist.org/packages/decodelabs/exemplar)
-[![Total Downloads](https://img.shields.io/packagist/dt/decodelabs/exemplar.svg?style=flat-square)](https://packagist.org/packages/decodelabs/exemplar)
-[![Build Status](https://img.shields.io/travis/com/decodelabs/exemplar/main.svg?style=flat-square)](https://travis-ci.com/decodelabs/exemplar)
-[![PHPStan](https://img.shields.io/badge/PHPStan-enabled-44CC11.svg?longCache=true&style=flat-square)](https://github.com/phpstan/phpstan)
-[![License](https://img.shields.io/packagist/l/decodelabs/exemplar?style=flat-square)](https://packagist.org/packages/decodelabs/exemplar)
--->
+[![PHP from Packagist](https://img.shields.io/packagist/php-v/decodelabs/exemplar?style=flat)](https://packagist.org/packages/decodelabs/exemplar)
+[![Latest Version](https://img.shields.io/packagist/v/decodelabs/exemplar.svg?style=flat)](https://packagist.org/packages/decodelabs/exemplar)
+[![Total Downloads](https://img.shields.io/packagist/dt/decodelabs/exemplar.svg?style=flat)](https://packagist.org/packages/decodelabs/exemplar)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/decodelabs/exemplar/PHP%20Composer)](https://github.com/decodelabs/exemplar/actions/workflows/php.yml)
+[![PHPStan](https://img.shields.io/badge/PHPStan-enabled-44CC11.svg?longCache=true&style=flat)](https://github.com/phpstan/phpstan)
+[![License](https://img.shields.io/packagist/l/decodelabs/exemplar?style=flat)](https://packagist.org/packages/decodelabs/exemplar)
 
 Powerful XML tools for PHP.
 
