@@ -1,3 +1,7 @@
+## v0.2.2 (2022-03-10)
+* Transitioned from Travis to GHA
+* Updated PHPStan and ECS dependencies
+
 ## v0.2.1 (2021-05-01)
 * Improved return type hints
 
