@@ -1663,6 +1663,10 @@ class Element implements
             throw Exceptional::UnexpectedValue('Element has no parent node', null, $this->element);
         }
 
+        if (!$this->element->parentNode instanceof DOMElement) {
+            throw Exceptional::UnexpectedValue('Element\'s parent is not an element', null, $this->element);
+        }
+
         return $this->element->parentNode;
     }
 
