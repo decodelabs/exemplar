@@ -11,24 +11,8 @@ namespace DecodeLabs\Exemplar;
 
 interface Consumer
 {
-    /**
-     * @param mixed $xml
-     * @return static
-     */
-    public static function fromXml($xml): Consumer;
-
-    /**
-     * @return static
-     */
-    public static function fromXmlFile(string $path): Consumer;
-
-    /**
-     * @return static
-     */
-    public static function fromXmlString(string $xml): Consumer;
-
-    /**
-     * @return static
-     */
-    public static function fromXmlElement(Element $element): Consumer;
+    public static function fromXml(mixed $xml): static;
+    public static function fromXmlFile(string $path): static;
+    public static function fromXmlString(string $xml): static;
+    public static function fromXmlElement(Element $element): static;
 }

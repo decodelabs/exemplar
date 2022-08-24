@@ -33,65 +33,35 @@ class Writer implements
     Dumpable
 {
     use AttributeContainerTrait;
+
     public const ELEMENT = 1;
     public const CDATA = 2;
     public const CDATA_ELEMENT = 3;
     public const COMMENT = 4;
     public const PI = 5;
 
-    /**
-     * @var XMLWriter
-     */
-    protected $document;
+    protected XMLWriter $document;
+    protected ?string $path = null;
 
-    /**
-     * @var string|null
-     */
-    protected $path;
+    protected bool $headerWritten = false;
+    protected bool $dtdWritten = false;
+    protected bool $rootWritten = false;
+    protected bool $finalized = false;
 
-
-    /**
-     * @var bool
-     */
-    protected $headerWritten = false;
-
-    /**
-     * @var bool
-     */
-    protected $dtdWritten = false;
-
-    /**
-     * @var bool
-     */
-    protected $rootWritten = false;
-
-    /**
-     * @var bool
-     */
-    protected $finalized = false;
-
-
-    /**
-     * @var string|null
-     */
-    protected $elementContent = null;
+    protected ?string $elementContent = null;
 
     /**
      * @var array<string>
      */
-    protected $rawAttributeNames = [];
+    protected array $rawAttributeNames = [];
 
-    /**
-     * @var int|null
-     */
-    protected $currentNode = null;
-
+    protected ?int $currentNode = null;
 
 
     /**
      * Create file writer
      */
-    public static function createFile(string $path): Writer
+    public static function createFile(string $path): static
     {
         $dir = dirname($path);
 
@@ -102,22 +72,24 @@ class Writer implements
         $document = new XMLWriter();
         $document->openURI($path);
 
-        return new self($document, $path);
+        return new static($document, $path);
     }
 
     /**
      * Create writer in memory
      */
-    public static function create(): Writer
+    public static function create(): static
     {
-        return new self();
+        return new static();
     }
 
     /**
      * Init with optional file path
      */
-    protected function __construct(XMLWriter $document = null, ?string $path = null)
-    {
+    final protected function __construct(
+        XMLWriter $document = null,
+        ?string $path = null
+    ) {
         if ($document === null) {
             $document = new XMLWriter();
             $document->openMemory();
@@ -160,8 +132,11 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeHeader(string $version = '1.0', string $encoding = 'UTF-8', bool $standalone = false): Writer
-    {
+    public function writeHeader(
+        string $version = '1.0',
+        string $encoding = 'UTF-8',
+        bool $standalone = false
+    ): static {
         if ($this->headerWritten) {
             throw Exceptional::Logic('XML header has already been written');
         }
@@ -187,8 +162,12 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeDtd(string $name, string $publicId = null, string $systemId = null, string $subset = null): Writer
-    {
+    public function writeDtd(
+        string $name,
+        string $publicId = null,
+        string $systemId = null,
+        string $subset = null
+    ): static {
         if ($this->rootWritten) {
             throw Exceptional::Logic('XML DTD cannot be written once the document is open');
         }
@@ -214,8 +193,10 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeDtdAttlist(string $name, string $content): Writer
-    {
+    public function writeDtdAttlist(
+        string $name,
+        string $content
+    ): static {
         if ($this->rootWritten) {
             throw Exceptional::Logic('XML DTD cannot be written once the document is open');
         }
@@ -241,8 +222,10 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeDtdElement(string $name, string $content): Writer
-    {
+    public function writeDtdElement(
+        string $name,
+        string $content
+    ): static {
         if ($this->rootWritten) {
             throw Exceptional::Logic('XML DTD cannot be written once the document is open');
         }
@@ -268,8 +251,14 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeDtdEntity(string $name, string $content, bool $isParam, string $publicId, string $systemId, string $nDataId): Writer
-    {
+    public function writeDtdEntity(
+        string $name,
+        string $content,
+        bool $isParam,
+        string $publicId,
+        string $systemId,
+        string $nDataId
+    ): static {
         if ($this->rootWritten) {
             throw Exceptional::Logic('XML DTD cannot be written once the document is open');
         }
@@ -296,8 +285,10 @@ class Writer implements
      *
      * @param array<mixed> $args
      */
-    public function __call(string $method, array $args): Writer
-    {
+    public function __call(
+        string $method,
+        array $args
+    ): static {
         return $this->writeElement($method, ...$args);
     }
 
@@ -305,11 +296,13 @@ class Writer implements
     /**
      * Write full element in one go
      *
-     * @param mixed $content
      * @param array<string, mixed>|null $attributes
      */
-    public function writeElement(string $name, $content = null, array $attributes = null): Writer
-    {
+    public function writeElement(
+        string $name,
+        mixed $content = null,
+        array $attributes = null
+    ): static {
         $this->startElement($name, $attributes);
 
         if ($content !== null) {
@@ -325,8 +318,10 @@ class Writer implements
      * @param array<string, mixed>|null $attributes
      * @return $this
      */
-    public function startElement(string $name, array $attributes = null): Writer
-    {
+    public function startElement(
+        string $name,
+        array $attributes = null
+    ): static {
         $this->completeCurrentNode();
 
         if ($attributes === null) {
@@ -407,7 +402,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function endElement(): Writer
+    public function endElement(): static
     {
         if ($this->currentNode === self::CDATA) {
             $this->completeCurrentNode();
@@ -435,10 +430,9 @@ class Writer implements
     /**
      * Store element content ready for writing
      *
-     * @param mixed $content
      * @return $this
      */
-    public function setElementContent($content): Writer
+    public function setElementContent(mixed $content): static
     {
         $this->elementContent = $this->renderContent($content);
         return $this;
@@ -446,10 +440,8 @@ class Writer implements
 
     /**
      * Render element content to string
-     *
-     * @param mixed $content
      */
-    protected function renderContent($content): ?string
+    protected function renderContent(mixed $content): ?string
     {
         if (is_callable($content) && is_object($content)) {
             return $this->renderContent($content($this));
@@ -481,7 +473,7 @@ class Writer implements
     /**
      * Write a full CDATA section
      */
-    public function writeCData(?string $content): Writer
+    public function writeCData(?string $content): static
     {
         $this->startCData();
         $this->writeCDataContent((string)$content);
@@ -493,8 +485,11 @@ class Writer implements
      *
      * @param array<string, mixed>|null $attributes
      */
-    public function writeCDataElement(string $name, ?string $content, array $attributes = null): Writer
-    {
+    public function writeCDataElement(
+        string $name,
+        ?string $content,
+        array $attributes = null
+    ): static {
         $this->startElement($name, $attributes);
         $this->writeCData($content);
         return $this->endElement();
@@ -505,7 +500,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function startCData(): Writer
+    public function startCData(): static
     {
         $this->completeCurrentNode();
         $this->document->startCData();
@@ -518,7 +513,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeCDataContent(?string $content): Writer
+    public function writeCDataContent(?string $content): static
     {
         if ($this->currentNode !== self::CDATA) {
             throw Exceptional::Logic('XML writer is not currently writing CDATA');
@@ -534,7 +529,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function endCData(): Writer
+    public function endCData(): static
     {
         if ($this->currentNode !== self::CDATA) {
             throw Exceptional::Logic('XML writer is not current writing CDATA');
@@ -549,7 +544,7 @@ class Writer implements
     /**
      * Write comment in one go
      */
-    public function writeComment(?string $comment): Writer
+    public function writeComment(?string $comment): static
     {
         $this->startComment();
         $this->writeCommentContent($comment);
@@ -561,7 +556,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function startComment(): Writer
+    public function startComment(): static
     {
         $this->completeCurrentNode();
         $this->document->startComment();
@@ -574,7 +569,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeCommentContent(?string $comment): Writer
+    public function writeCommentContent(?string $comment): static
     {
         if ($this->currentNode !== self::COMMENT) {
             throw Exceptional::Logic('XML writer is not currently writing a comment');
@@ -590,7 +585,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function endComment(): Writer
+    public function endComment(): static
     {
         if ($this->currentNode !== self::COMMENT) {
             throw Exceptional::Logic('XML writer is not currently writing a comment');
@@ -605,8 +600,10 @@ class Writer implements
     /**
      * Write PI in one go
      */
-    public function writePi(string $target, ?string $content): Writer
-    {
+    public function writePi(
+        string $target,
+        ?string $content
+    ): static {
         $this->startPi($target);
         $this->writePiContent($content);
         return $this->endPi();
@@ -617,7 +614,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function startPi(string $target): Writer
+    public function startPi(string $target): static
     {
         $this->completeCurrentNode();
         $this->document->startPI($target);
@@ -630,7 +627,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function writePiContent(?string $content): Writer
+    public function writePiContent(?string $content): static
     {
         if ($this->currentNode !== self::PI) {
             throw Exceptional::Logic(
@@ -647,7 +644,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function endPi(): Writer
+    public function endPi(): static
     {
         if ($this->currentNode !== self::PI) {
             throw Exceptional::Logic(
@@ -667,7 +664,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function setRawAttributeNames(string ...$names): Writer
+    public function setRawAttributeNames(string ...$names): static
     {
         $this->rawAttributeNames = $names;
         return $this;
@@ -690,7 +687,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeRaw(?string $content): Writer
+    public function writeRaw(?string $content): static
     {
         $this->document->writeRaw((string)$content);
         return $this;
@@ -710,12 +707,14 @@ class Writer implements
                         $value = $value ? 'true' : 'false';
                     }
 
+                    $value = Coercion::toString($value);
+
                     if (in_array($key, $this->rawAttributeNames)) {
                         $this->document->startAttribute($key);
                         $this->document->writeRaw($value);
                         $this->document->endAttribute();
                     } else {
-                        $this->document->writeAttribute($key, (string)$value);
+                        $this->document->writeAttribute($key, $value);
                     }
                 }
 
@@ -754,7 +753,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function finalize(): Writer
+    public function finalize(): static
     {
         if ($this->finalized) {
             return $this;
@@ -833,7 +832,7 @@ class Writer implements
      *
      * @return $this
      */
-    public function importXmlElement(Element $element): Writer
+    public function importXmlElement(Element $element): static
     {
         $this->completeCurrentNode();
         $this->document->writeRaw("\n" . $element->__toString() . "\n");
@@ -875,10 +874,11 @@ class Writer implements
      * Shortcut to set attribute
      *
      * @param string $key
-     * @param mixed $value
      */
-    public function offsetSet($key, $value): void
-    {
+    public function offsetSet(
+        mixed $key,
+        mixed $value
+    ): void {
         $this->setAttribute($key, $value);
     }
 
@@ -886,9 +886,8 @@ class Writer implements
      * Shortcut to get attribute
      *
      * @param string $key
-     * @return mixed
      */
-    public function offsetGet($key)
+    public function offsetGet(mixed $key): mixed
     {
         return $this->getAttribute($key);
     }
@@ -898,7 +897,7 @@ class Writer implements
      *
      * @param string $key
      */
-    public function offsetExists($key): bool
+    public function offsetExists(mixed $key): bool
     {
         return $this->hasAttribute($key);
     }
@@ -908,7 +907,7 @@ class Writer implements
      *
      * @param string $key
      */
-    public function offsetUnset($key): void
+    public function offsetUnset(mixed $key): void
     {
         $this->removeAttribute($key);
     }

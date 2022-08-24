@@ -11,18 +11,16 @@ namespace DecodeLabs\Exemplar;
 
 use DecodeLabs\Atlas\File;
 use DecodeLabs\Exceptional;
-
+use DOMDocument;
+use DOMElement;
 use ReflectionClass;
 
 trait SerializableTrait
 {
     /**
      * Create from any xml type
-     *
-     * @param mixed $xml
-     * @return static
      */
-    public static function fromXml($xml): Consumer
+    public static function fromXml(mixed $xml): static
     {
         if ($xml instanceof self) {
             return $xml;
@@ -34,7 +32,13 @@ trait SerializableTrait
             return static::fromXmlElement(Element::fromDomElement($xml));
         } elseif ($xml instanceof File) {
             return static::fromXmlFile($xml->getPath());
-        } elseif (is_string($xml) || (is_object($xml) && method_exists($xml, '__toString'))) {
+        } elseif (
+            is_string($xml) ||
+            (
+                is_object($xml) &&
+                method_exists($xml, '__toString')
+            )
+        ) {
             return static::fromXmlString((string)$xml);
         } else {
             throw Exceptional::UnexpectedValue(
@@ -50,7 +54,7 @@ trait SerializableTrait
      *
      * @return static
      */
-    public static function fromXmlFile(string $path): Consumer
+    public static function fromXmlFile(string $path): static
     {
         return static::fromXmlElement(Element::fromXmlFile($path));
     }
@@ -60,7 +64,7 @@ trait SerializableTrait
      *
      * @return static
      */
-    public static function fromXmlString(string $xml): Consumer
+    public static function fromXmlString(string $xml): static
     {
         return static::fromXmlElement(Element::fromXmlString($xml));
     }
@@ -70,7 +74,7 @@ trait SerializableTrait
      *
      * @return static
      */
-    public static function fromXmlElement(Element $element): Consumer
+    public static function fromXmlElement(Element $element): static
     {
         $class = get_called_class();
         $ref = new ReflectionClass($class);
