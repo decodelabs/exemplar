@@ -44,20 +44,21 @@ class Element implements
      */
     protected $element;
 
-
     /**
      * Create from any xml type
-     *
-     * @param mixed $xml
-     *
-     * @return static|self
      */
-    public static function fromXml($xml): Consumer
+    public static function fromXml(mixed $xml): static
     {
-        if ($xml instanceof Element) {
+        if ($xml instanceof static) {
             return $xml;
         } elseif ($xml instanceof Provider) {
-            return $xml->toXmlElement();
+            $output = $xml->toXmlElement();
+
+            if (!$output instanceof static) {
+                $output = new static($output->getDomElement());
+            }
+
+            return $output;
         } elseif ($xml instanceof DOMDocument) {
             return static::fromDomDocument($xml);
         } elseif ($xml instanceof DOMElement) {
@@ -87,7 +88,7 @@ class Element implements
     /**
      * Create instance from file
      */
-    public static function fromFile(string $path): Element
+    public static function fromFile(string $path): static
     {
         $extension = strtolower((string)pathinfo($path, \PATHINFO_EXTENSION));
 
@@ -100,10 +101,8 @@ class Element implements
 
     /**
      * Create instance from XML file
-     *
-     * @return static|self
      */
-    public static function fromXmlFile(string $path): Consumer
+    public static function fromXmlFile(string $path): static
     {
         try {
             $document = static::newDomDocument();
@@ -120,7 +119,7 @@ class Element implements
     /**
      * Create instance from string
      */
-    public static function fromString(string $xml): Element
+    public static function fromString(string $xml): static
     {
         if (preg_match('/^\<\!DOCTYPE html\>/', $xml)) {
             return static::fromHtmlString($xml);
@@ -131,10 +130,8 @@ class Element implements
 
     /**
      * Create instance from XML string
-     *
-     * @return static|self
      */
-    public static function fromXmlString(string $xml): Consumer
+    public static function fromXmlString(string $xml): static
     {
         $xml = trim($xml);
 
@@ -159,7 +156,7 @@ class Element implements
     /**
      * Create HTML instance from file
      */
-    public static function fromHtmlFile(string $path): Element
+    public static function fromHtmlFile(string $path): static
     {
         try {
             $document = static::newDomDocument();
@@ -176,7 +173,7 @@ class Element implements
     /**
      * Create instance from string
      */
-    public static function fromHtmlString(string $xml): Element
+    public static function fromHtmlString(string $xml): static
     {
         try {
             $document = static::newDomDocument();
@@ -192,18 +189,20 @@ class Element implements
 
     /**
      * Passthrough
-     *
-     * @return static|self
      */
-    public static function fromXmlElement(Element $element): Consumer
+    public static function fromXmlElement(Element $element): static
     {
+        if (!$element instanceof static) {
+            $element = new static($element->getDomElement());
+        }
+
         return $element;
     }
 
     /**
      * Create instance from DOMDocument
      */
-    public static function fromDomDocument(DOMDocument $document): Element
+    public static function fromDomDocument(DOMDocument $document): static
     {
         $document->formatOutput = true;
 
@@ -217,7 +216,7 @@ class Element implements
     /**
      * Create instance from DOMElement
      */
-    public static function fromDomElement(DOMElement $element): Element
+    public static function fromDomElement(DOMElement $element): static
     {
         self::extractOwnerDocument($element)->formatOutput = true;
         return static::wrapDomNode($element);
@@ -262,7 +261,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setTagName(string $name): Element
+    public function setTagName(string $name): static
     {
         $document = $this->getDomDocument();
         $newNode = $document->createElement($name);
@@ -304,7 +303,7 @@ class Element implements
      * @param array<string, mixed> $attributes
      * @return $this
      */
-    public function setAttributes(array $attributes): AttributeContainer
+    public function setAttributes(array $attributes): static
     {
         foreach ($attributes as $key => $value) {
             $this->setAttribute($key, $value);
@@ -317,8 +316,9 @@ class Element implements
      * Replace attribute on node
      *
      * @param array<string, mixed> $attributes
+     * @return $this
      */
-    public function replaceAttributes(array $attributes): AttributeContainer
+    public function replaceAttributes(array $attributes): static
     {
         return $this->clearAttributes()->setAttributes($attributes);
     }
@@ -329,7 +329,7 @@ class Element implements
      * @param mixed $value
      * @return $this
      */
-    public function setAttribute(string $key, $value): AttributeContainer
+    public function setAttribute(string $key, $value): static
     {
         $this->element->setAttribute(
             $key,
@@ -404,7 +404,7 @@ class Element implements
      *
      * @return $this
      */
-    public function removeAttribute(string ...$keys): AttributeContainer
+    public function removeAttribute(string ...$keys): static
     {
         foreach ($keys as $key) {
             $this->element->removeAttribute($key);
@@ -458,7 +458,7 @@ class Element implements
      *
      * @return $this
      */
-    public function clearAttributes(): AttributeContainer
+    public function clearAttributes(): static
     {
         foreach ($this->element->attributes ?? [] as $attrNode) {
             /** @var DOMAttr $attrNode */
@@ -476,7 +476,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setInnerXml(string $inner): Element
+    public function setInnerXml(string $inner): static
     {
         $this->removeAllChildren();
 
@@ -519,7 +519,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setTextContent(string $content): Element
+    public function setTextContent(string $content): static
     {
         $this->removeAllChildren();
 
@@ -593,7 +593,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setCDataContent(string $content): Element
+    public function setCDataContent(string $content): static
     {
         $this->removeAllChildren();
 
@@ -608,7 +608,7 @@ class Element implements
      *
      * @return $this
      */
-    public function prependCDataContent(string $content): Element
+    public function prependCDataContent(string $content): static
     {
         $content = $this->getDomDocument()->createCDataSection($content);
 
@@ -626,7 +626,7 @@ class Element implements
      *
      * @return $this
      */
-    public function appendCDataContent(string $content): Element
+    public function appendCDataContent(string $content): static
     {
         $content = $this->getDomDocument()->createCDataSection($content);
         $this->element->appendChild($content);
@@ -734,7 +734,7 @@ class Element implements
     /**
      * Get list of elements of type
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function __get(string $name): array
     {
@@ -745,7 +745,7 @@ class Element implements
     /**
      * Scan all child elements
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     public function scanChildren(): Traversable
     {
@@ -755,7 +755,7 @@ class Element implements
     /**
      * Get all child elements
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function getChildren(): array
     {
@@ -765,7 +765,7 @@ class Element implements
     /**
      * Get first child element
      */
-    public function getFirstChild(): ?Element
+    public function getFirstChild(): ?static
     {
         return $this->getFirstChildNode();
     }
@@ -773,7 +773,7 @@ class Element implements
     /**
      * Get last child element
      */
-    public function getLastChild(): ?Element
+    public function getLastChild(): ?static
     {
         return $this->getLastChildNode();
     }
@@ -781,7 +781,7 @@ class Element implements
     /**
      * Get child element by index
      */
-    public function getNthChild(int $index): ?Element
+    public function getNthChild(int $index): ?static
     {
         return $this->getNthChildNode($index);
     }
@@ -789,7 +789,7 @@ class Element implements
     /**
      * Scan list of children by formula
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     public function scanNthChildren(string $formula): Traversable
     {
@@ -799,7 +799,7 @@ class Element implements
     /**
      * Get list of children by formula
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function getNthChildren(string $formula): array
     {
@@ -809,7 +809,7 @@ class Element implements
     /**
      * Scan all children of type
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     public function scanChildrenOfType(string $name): Traversable
     {
@@ -819,7 +819,7 @@ class Element implements
     /**
      * Get all children of type
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function getChildrenOfType(string $name): array
     {
@@ -829,7 +829,7 @@ class Element implements
     /**
      * Get first child of type
      */
-    public function getFirstChildOfType(string $name): ?Element
+    public function getFirstChildOfType(string $name): ?static
     {
         return $this->getFirstChildNode($name);
     }
@@ -837,7 +837,7 @@ class Element implements
     /**
      * Get last child of type
      */
-    public function getLastChildOfType(string $name): ?Element
+    public function getLastChildOfType(string $name): ?static
     {
         return $this->getLastChildNode($name);
     }
@@ -845,28 +845,34 @@ class Element implements
     /**
      * Get child of type by index
      */
-    public function getNthChildOfType(string $name, int $index): ?Element
-    {
+    public function getNthChildOfType(
+        string $name,
+        int $index
+    ): ?static {
         return $this->getNthChildNode($index, $name);
     }
 
     /**
      * Scan child of type by formula
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
-    public function scanNthChildrenOfType(string $name, string $formula): Traversable
-    {
+    public function scanNthChildrenOfType(
+        string $name,
+        string $formula
+    ): Traversable {
         return $this->scanNthChildList($formula, $name);
     }
 
     /**
      * Get child of type by formula
      *
-     * @return array<Element>
+     * @return array<static>
      */
-    public function getNthChildrenOfType(string $name, string $formula): array
-    {
+    public function getNthChildrenOfType(
+        string $name,
+        string $formula
+    ): array {
         return iterator_to_array($this->scanNthChildList($formula, $name));
     }
 
@@ -874,7 +880,7 @@ class Element implements
     /**
      * Shared child fetcher
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     protected function scanChildList(?string $name = null): Traversable
     {
@@ -896,7 +902,7 @@ class Element implements
     /**
      * Get first element in list
      */
-    protected function getFirstChildNode(?string $name = null): ?Element
+    protected function getFirstChildNode(?string $name = null): ?static
     {
         foreach ($this->element->childNodes as $node) {
             /** @var DOMNode $node */
@@ -918,7 +924,7 @@ class Element implements
     /**
      * Get last element in list
      */
-    protected function getLastChildNode(?string $name = null): ?Element
+    protected function getLastChildNode(?string $name = null): ?static
     {
         $lastElement = null;
 
@@ -946,8 +952,10 @@ class Element implements
     /**
      * Get child at index
      */
-    protected function getNthChildNode(int $index, ?string $name = null): ?Element
-    {
+    protected function getNthChildNode(
+        int $index,
+        ?string $name = null
+    ): ?static {
         if ($index < 1) {
             throw Exceptional::InvalidArgument(
                 $index . ' is an invalid child index'
@@ -978,10 +986,12 @@ class Element implements
     /**
      * Get children by formula
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
-    protected function scanNthChildList(string $formula, string $name = null): Traversable
-    {
+    protected function scanNthChildList(
+        string $formula,
+        string $name = null
+    ): Traversable {
         if (is_numeric($formula)) {
             if ($output = $this->getNthChildNode((int)$formula, $name)) {
                 yield $output;
@@ -1036,7 +1046,7 @@ class Element implements
     /**
      * Wrap DOMNode as Element
      */
-    protected static function wrapDomNode(DOMNode $node): Element
+    protected static function wrapDomNode(DOMNode $node): static
     {
         if (!$node instanceof DOMElement) {
             throw Exceptional::UnexpectedValue('Node is not an element', null, $node);
@@ -1048,7 +1058,7 @@ class Element implements
     /**
      * Wrap DOMNode as Element or null
      */
-    protected static function wrapNullableDomNode(?DOMNode $node): ?Element
+    protected static function wrapNullableDomNode(?DOMNode $node): ?static
     {
         if (!$node instanceof DOMElement) {
             return null;
@@ -1087,11 +1097,11 @@ class Element implements
 
     /**
      * Add child to end of node
-     *
-     * @param Element|string $newChild
      */
-    public function prependChild($newChild, ?string $value = null): Element
-    {
+    public function prependChild(
+        Element|string $newChild,
+        ?string $value = null
+    ): static {
         $node = $this->normalizeInputChild($newChild, $value);
 
         if ($this->element->firstChild !== null) {
@@ -1105,11 +1115,11 @@ class Element implements
 
     /**
      * Add child to start of node
-     *
-     * @param Element|string $newChild
      */
-    public function appendChild($newChild, ?string $value = null): Element
-    {
+    public function appendChild(
+        Element|string $newChild,
+        ?string $value = null
+    ): static {
         $node = $this->normalizeInputChild($newChild, $value);
         $node = $this->element->appendChild($node);
 
@@ -1118,11 +1128,12 @@ class Element implements
 
     /**
      * Replace child node in place
-     *
-     * @param Element|string $newChild
      */
-    public function replaceChild(Element $origChild, $newChild, ?string $value = null): Element
-    {
+    public function replaceChild(
+        Element $origChild,
+        Element|string $newChild,
+        ?string $value = null
+    ): static {
         $origChild = $origChild->getDomElement();
         $node = $this->normalizeInputChild($newChild, $value);
         $this->element->replaceChild($node, $origChild);
@@ -1132,11 +1143,12 @@ class Element implements
 
     /**
      * Add child at index
-     *
-     * @param Element|string $newChild
      */
-    public function putChild(int $index, $newChild, ?string $value = null): Element
-    {
+    public function putChild(
+        int $index,
+        Element|string $newChild,
+        ?string $value = null
+    ): static {
         $newNode = $this->normalizeInputChild($newChild, $value);
         $origIndex = $index;
         $count = $this->count();
@@ -1181,11 +1193,12 @@ class Element implements
 
     /**
      * Add child node before chosen node
-     *
-     * @param Element|string $newChild
      */
-    public function insertChildBefore(Element $origChild, $newChild, ?string $value = null): Element
-    {
+    public function insertChildBefore(
+        Element $origChild,
+        Element|string $newChild,
+        ?string $value = null
+    ): static {
         $origChild = $origChild->getDomElement();
         $node = $this->normalizeInputChild($newChild, $value);
         $node = $this->element->insertBefore($node, $origChild);
@@ -1195,11 +1208,12 @@ class Element implements
 
     /**
      * Add child node after chosen node
-     *
-     * @param Element|string $newChild
      */
-    public function insertChildAfter(Element $origChild, $newChild, ?string $value = null): Element
-    {
+    public function insertChildAfter(
+        Element $origChild,
+        Element|string $newChild,
+        ?string $value = null
+    ): static {
         $origChild = $origChild->getDomElement();
 
         if (!$origChild instanceof DOMElement) {
@@ -1231,7 +1245,7 @@ class Element implements
      *
      * @return $this
      */
-    public function removeChild(Element $child): Element
+    public function removeChild(Element $child): static
     {
         $child = $child->getDomElement();
         $this->element->removeChild($child);
@@ -1243,7 +1257,7 @@ class Element implements
      *
      * @return $this
      */
-    public function removeAllChildren(): Element
+    public function removeAllChildren(): static
     {
         $queue = [];
 
@@ -1263,7 +1277,7 @@ class Element implements
     /**
      * Get parent node
      */
-    public function getParent(): ?Element
+    public function getParent(): ?static
     {
         return $this->wrapNullableDomNode($this->element->parentNode);
     }
@@ -1325,7 +1339,7 @@ class Element implements
     /**
      * Get previous node
      */
-    public function getPreviousSibling(): ?Element
+    public function getPreviousSibling(): ?static
     {
         $node = $this->element->previousSibling;
 
@@ -1341,7 +1355,7 @@ class Element implements
     /**
      * Get next node
      */
-    public function getNextSibling(): ?Element
+    public function getNextSibling(): ?static
     {
         $node = $this->element->nextSibling;
 
@@ -1357,11 +1371,11 @@ class Element implements
 
     /**
      * Insert sibling before this node
-     *
-     * @param Element|string $sibling
      */
-    public function insertBefore($sibling, ?string $value = null): Element
-    {
+    public function insertBefore(
+        Element|string $sibling,
+        ?string $value = null
+    ): static {
         $node = $this->normalizeInputChild($sibling, $value);
         $node = $this->getParentDomElement()->insertBefore($node, $this->element);
 
@@ -1370,11 +1384,11 @@ class Element implements
 
     /**
      * Insert sibling after this node
-     *
-     * @param Element|string $sibling
      */
-    public function insertAfter($sibling, ?string $value = null): Element
-    {
+    public function insertAfter(
+        Element|string $sibling,
+        ?string $value = null
+    ): static {
         $node = $this->normalizeInputChild($sibling, $value);
 
         $target = $this->element;
@@ -1395,11 +1409,12 @@ class Element implements
     /**
      * Replace this node with another
      *
-     * @param Element|string $sibling
      * @return $this
      */
-    public function replaceWith($sibling, ?string $value = null): Element
-    {
+    public function replaceWith(
+        Element|string $sibling,
+        ?string $value = null
+    ): static {
         $node = $this->normalizeInputChild($sibling, $value);
         $this->getParentDomElement()->replaceChild($node, $this->element);
         $this->element = $node;
@@ -1469,7 +1484,7 @@ class Element implements
     /**
      * Get element by id
      */
-    public function getById(string $id): ?Element
+    public function getById(string $id): ?static
     {
         return $this->firstXPath('//*[@id=\'' . $id . '\']');
     }
@@ -1477,7 +1492,7 @@ class Element implements
     /**
      * Scan all nodes of type
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     public function scanByType(string $type): Traversable
     {
@@ -1490,7 +1505,7 @@ class Element implements
     /**
      * Get all nodes of type
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function getByType(string $type): array
     {
@@ -1500,7 +1515,7 @@ class Element implements
     /**
      * Scan all nodes by attribute
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     public function scanByAttribute(string $name, ?string $value = null): Traversable
     {
@@ -1516,7 +1531,7 @@ class Element implements
     /**
      * Get all nodes by attribute
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function getByAttribute(string $name, ?string $value = null): array
     {
@@ -1527,7 +1542,7 @@ class Element implements
     /**
      * Scan nodes matching xPath
      *
-     * @return Traversable<Element>
+     * @return Traversable<static>
      */
     public function scanXPath(string $path): Traversable
     {
@@ -1546,7 +1561,7 @@ class Element implements
     /**
      * Get nodes matching xPath
      *
-     * @return array<Element>
+     * @return array<static>
      */
     public function getXPath(string $path): array
     {
@@ -1556,7 +1571,7 @@ class Element implements
     /**
      * Get first xPath result
      */
-    public function firstXPath(string $path): ?Element
+    public function firstXPath(string $path): ?static
     {
         $xpath = new DOMXPath($this->getDomDocument());
 
@@ -1573,7 +1588,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setXmlVersion(string $version): Element
+    public function setXmlVersion(string $version): static
     {
         $this->getDomDocument()->xmlVersion = $version;
         return $this;
@@ -1592,7 +1607,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setDocumentEncoding(string $encoding): Element
+    public function setDocumentEncoding(string $encoding): static
     {
         $this->getDomDocument()->xmlEncoding = $encoding;
         return $this;
@@ -1611,7 +1626,7 @@ class Element implements
      *
      * @return $this
      */
-    public function setDocumentStandalone(bool $flag): Element
+    public function setDocumentStandalone(bool $flag): static
     {
         $this->getDomDocument()->xmlStandalone = $flag;
         return $this;
@@ -1630,7 +1645,7 @@ class Element implements
      *
      * @return $this
      */
-    public function normalizeDocument(): Element
+    public function normalizeDocument(): static
     {
         $this->getDomDocument()->normalizeDocument();
         return $this;
@@ -1672,11 +1687,11 @@ class Element implements
 
     /**
      * Ensure input is DomElement
-     *
-     * @param Element|string $child
      */
-    protected function normalizeInputChild($child, ?string $value = null): DOMElement
-    {
+    protected function normalizeInputChild(
+        Element|string $child,
+        ?string $value = null
+    ): DOMElement {
         $node = null;
 
         if ($child instanceof Element) {
@@ -1781,10 +1796,11 @@ class Element implements
      * Shortcut to set attribute
      *
      * @param string $key
-     * @param mixed $value
      */
-    public function offsetSet($key, $value): void
-    {
+    public function offsetSet(
+        mixed $key,
+        mixed $value
+    ): void {
         $this->setAttribute($key, $value);
     }
 
@@ -1792,9 +1808,8 @@ class Element implements
      * Shortcut to get attribute
      *
      * @param string $key
-     * @return mixed
      */
-    public function offsetGet($key)
+    public function offsetGet(mixed $key): mixed
     {
         return $this->getAttribute($key);
     }
@@ -1804,7 +1819,7 @@ class Element implements
      *
      * @param string $key
      */
-    public function offsetExists($key): bool
+    public function offsetExists(mixed $key): bool
     {
         return $this->hasAttribute($key);
     }
@@ -1814,7 +1829,7 @@ class Element implements
      *
      * @param string $key
      */
-    public function offsetUnset($key): void
+    public function offsetUnset(mixed $key): void
     {
         $this->removeAttribute($key);
     }
