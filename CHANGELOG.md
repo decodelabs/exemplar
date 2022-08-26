@@ -1,3 +1,5 @@
+## v0.3.2 (2022-08-26)
+* Fixed attribute stringification in Writer
 * Updated CI environment
 
 ## v0.3.1 (2022-08-24)
