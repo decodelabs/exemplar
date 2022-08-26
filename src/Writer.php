@@ -707,7 +707,7 @@ class Writer implements
                         $value = $value ? 'true' : 'false';
                     }
 
-                    $value = Coercion::toString($value);
+                    $value = Coercion::forceString($value);
 
                     if (in_array($key, $this->rawAttributeNames)) {
                         $this->document->startAttribute($key);
