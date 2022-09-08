@@ -15,7 +15,7 @@
         "decodelabs/elementary": "^0.2",
         "decodelabs/exceptional": "^0.4",
         "decodelabs/glitch-support": "^0.4",
-        "decodelabs/collections": "^0.7"
+        "decodelabs/collections": "^0.8"
     },
     "require-dev": {
         "phpunit/phpunit": "^9",
