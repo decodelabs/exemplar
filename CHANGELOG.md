@@ -1,3 +1,6 @@
+## v0.3.3 (2022-09-08)
+* Updated Collections dependency
+
 ## v0.3.2 (2022-08-26)
 * Fixed attribute stringification in Writer
 * Updated CI environment
