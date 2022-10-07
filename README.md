@@ -7,7 +7,13 @@
 [![PHPStan](https://img.shields.io/badge/PHPStan-enabled-44CC11.svg?longCache=true&style=flat)](https://github.com/phpstan/phpstan)
 [![License](https://img.shields.io/packagist/l/decodelabs/exemplar?style=flat)](https://packagist.org/packages/decodelabs/exemplar)
 
-Powerful XML tools for PHP.
+### Powerful XML tools for PHP.
+
+Exemplar provides a set of exhaustive and intuitive interfaces for reading, writing and manipulating XML documents and fragments.
+
+_Get news and updates on the [DecodeLabs blog](https://blog.decodelabs.com)._
+
+---
 
 
 ## Installation
