@@ -1808,6 +1808,7 @@ class Element implements
      * Shortcut to get attribute
      *
      * @param string $key
+     * @return ?string
      */
     public function offsetGet(mixed $key): mixed
     {
