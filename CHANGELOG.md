@@ -1,3 +1,5 @@
+## v0.3.4 (2022-10-20)
+* Added offsetGet return type
 * Updated composer check script
 
 ## v0.3.3 (2022-09-08)
