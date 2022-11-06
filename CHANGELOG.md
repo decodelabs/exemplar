@@ -1,3 +1,5 @@
+* Fixed PHP8.1 testing
+
 ## v0.3.4 (2022-10-20)
 * Added offsetGet return type
 * Updated composer check script
