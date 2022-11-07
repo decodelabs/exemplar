@@ -450,7 +450,7 @@ class Element implements
             return 0;
         }
 
-        return $this->element->attributes->length;
+        return $this->element->attributes->count();
     }
 
     /**
