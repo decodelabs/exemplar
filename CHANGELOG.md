@@ -1,3 +1,7 @@
+## v0.3.5 (2023-09-26)
+* Migrated to use effigy in CI workflow
+* Fixed PHP8.1 testing
+
 ## v0.3.4 (2022-10-20)
 * Added offsetGet return type
 * Updated composer check script
