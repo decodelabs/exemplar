@@ -2,12 +2,12 @@
     "name": "decodelabs/exemplar",
     "description": "Powerful XML tools",
     "type": "library",
-    "keywords": ["markup", "xml"],
+    "keywords": [ "markup", "xml" ],
     "license": "MIT",
-    "authors": [{
-        "name": "Tom Wright",
-        "email": "tom@inflatablecookie.com"
-    }],
+    "authors": [ {
+            "name": "Tom Wright",
+            "email": "tom@inflatablecookie.com"
+        } ],
     "require": {
         "php": "^8.0",
 
@@ -19,7 +19,7 @@
     },
     "require-dev": {
         "decodelabs/phpstan-decodelabs": "^0.6",
-        "decodelabs/atlas": "^0.10"
+        "decodelabs/atlas": "^0.10|^0.11"
     },
     "suggest": {
         "decodelabs/atlas": "Save generated XML to file"
