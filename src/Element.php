@@ -446,6 +446,7 @@ class Element implements
      */
     public function countAttributes(): int
     {
+        /** @phpstan-ignore-next-line */
         if ($this->element->attributes === null) {
             return 0;
         }
