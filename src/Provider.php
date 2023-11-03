@@ -13,7 +13,13 @@ use DecodeLabs\Atlas\File;
 
 interface Provider
 {
-    public function toXmlString(bool $embedded = false): string;
-    public function toXmlFile(string $path): File;
+    public function toXmlString(
+        bool $embedded = false
+    ): string;
+
+    public function toXmlFile(
+        string $path
+    ): File;
+
     public function toXmlElement(): Element;
 }

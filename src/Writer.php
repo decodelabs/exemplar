@@ -61,8 +61,9 @@ class Writer implements
     /**
      * Create file writer
      */
-    public static function createFile(string $path): static
-    {
+    public static function createFile(
+        string $path
+    ): static {
         $dir = dirname($path);
 
         if (!is_dir($dir)) {
@@ -432,8 +433,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function setElementContent(mixed $content): static
-    {
+    public function setElementContent(
+        mixed $content
+    ): static {
         $this->elementContent = $this->renderContent($content);
         return $this;
     }
@@ -441,8 +443,9 @@ class Writer implements
     /**
      * Render element content to string
      */
-    protected function renderContent(mixed $content): ?string
-    {
+    protected function renderContent(
+        mixed $content
+    ): ?string {
         if (is_callable($content) && is_object($content)) {
             return $this->renderContent($content($this));
         }
@@ -473,8 +476,9 @@ class Writer implements
     /**
      * Write a full CDATA section
      */
-    public function writeCData(?string $content): static
-    {
+    public function writeCData(
+        ?string $content
+    ): static {
         $this->startCData();
         $this->writeCDataContent((string)$content);
         return $this->endCData();
@@ -513,8 +517,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeCDataContent(?string $content): static
-    {
+    public function writeCDataContent(
+        ?string $content
+    ): static {
         if ($this->currentNode !== self::CDATA) {
             throw Exceptional::Logic('XML writer is not currently writing CDATA');
         }
@@ -544,8 +549,9 @@ class Writer implements
     /**
      * Write comment in one go
      */
-    public function writeComment(?string $comment): static
-    {
+    public function writeComment(
+        ?string $comment
+    ): static {
         $this->startComment();
         $this->writeCommentContent($comment);
         return $this->endComment();
@@ -569,8 +575,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeCommentContent(?string $comment): static
-    {
+    public function writeCommentContent(
+        ?string $comment
+    ): static {
         if ($this->currentNode !== self::COMMENT) {
             throw Exceptional::Logic('XML writer is not currently writing a comment');
         }
@@ -614,8 +621,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function startPi(string $target): static
-    {
+    public function startPi(
+        string $target
+    ): static {
         $this->completeCurrentNode();
         $this->document->startPI($target);
         $this->currentNode = self::PI;
@@ -627,8 +635,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function writePiContent(?string $content): static
-    {
+    public function writePiContent(
+        ?string $content
+    ): static {
         if ($this->currentNode !== self::PI) {
             throw Exceptional::Logic(
                 'XML writer is not currently writing a processing instruction'
@@ -664,8 +673,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function setRawAttributeNames(string ...$names): static
-    {
+    public function setRawAttributeNames(
+        string ...$names
+    ): static {
         $this->rawAttributeNames = $names;
         return $this;
     }
@@ -687,8 +697,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function writeRaw(?string $content): static
-    {
+    public function writeRaw(
+        ?string $content
+    ): static {
         $this->document->writeRaw((string)$content);
         return $this;
     }
@@ -776,8 +787,9 @@ class Writer implements
     /**
      * Convert to string
      */
-    public function toXmlString(bool $embedded = false): string
-    {
+    public function toXmlString(
+        bool $embedded = false
+    ): string {
         $this->finalize();
         $string = $this->__toString();
 
@@ -792,8 +804,9 @@ class Writer implements
     /**
      * Export to file
      */
-    public function toXmlFile(string $path): File
-    {
+    public function toXmlFile(
+        string $path
+    ): File {
         if (!class_exists(Atlas::class)) {
             throw Exceptional::ComponentUnavailable(
                 'Saving XML to file requires DecodeLabs Atlas'
@@ -832,8 +845,9 @@ class Writer implements
      *
      * @return $this
      */
-    public function importXmlElement(Element $element): static
-    {
+    public function importXmlElement(
+        Element $element
+    ): static {
         $this->completeCurrentNode();
         $this->document->writeRaw("\n" . $element->__toString() . "\n");
         return $this;
@@ -842,8 +856,9 @@ class Writer implements
     /**
      * Normalize string for writing
      */
-    protected static function normalizeString(?string $string): string
-    {
+    protected static function normalizeString(
+        ?string $string
+    ): string {
         return (string)preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', '', (string)$string);
     }
 
@@ -887,8 +902,9 @@ class Writer implements
      *
      * @param string $key
      */
-    public function offsetGet(mixed $key): mixed
-    {
+    public function offsetGet(
+        mixed $key
+    ): mixed {
         return $this->getAttribute($key);
     }
 
@@ -897,8 +913,9 @@ class Writer implements
      *
      * @param string $key
      */
-    public function offsetExists(mixed $key): bool
-    {
+    public function offsetExists(
+        mixed $key
+    ): bool {
         return $this->hasAttribute($key);
     }
 
@@ -907,8 +924,9 @@ class Writer implements
      *
      * @param string $key
      */
-    public function offsetUnset(mixed $key): void
-    {
+    public function offsetUnset(
+        mixed $key
+    ): void {
         $this->removeAttribute($key);
     }
 

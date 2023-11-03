@@ -20,8 +20,9 @@ trait SerializableTrait
     /**
      * Create from any xml type
      */
-    public static function fromXml(mixed $xml): static
-    {
+    public static function fromXml(
+        mixed $xml
+    ): static {
         if ($xml instanceof self) {
             return $xml;
         } elseif ($xml instanceof Provider) {
@@ -54,8 +55,9 @@ trait SerializableTrait
      *
      * @return static
      */
-    public static function fromXmlFile(string $path): static
-    {
+    public static function fromXmlFile(
+        string $path
+    ): static {
         return static::fromXmlElement(Element::fromXmlFile($path));
     }
 
@@ -64,8 +66,9 @@ trait SerializableTrait
      *
      * @return static
      */
-    public static function fromXmlString(string $xml): static
-    {
+    public static function fromXmlString(
+        string $xml
+    ): static {
         return static::fromXmlElement(Element::fromXmlString($xml));
     }
 
@@ -74,8 +77,9 @@ trait SerializableTrait
      *
      * @return static
      */
-    public static function fromXmlElement(Element $element): static
-    {
+    public static function fromXmlElement(
+        Element $element
+    ): static {
         $class = get_called_class();
         $ref = new ReflectionClass($class);
 
@@ -95,6 +99,7 @@ trait SerializableTrait
             );
         }
 
+        /** @var static $output */
         $output = $ref->newInstanceWithoutConstructor();
         $output->xmlUnserialize($element);
 
@@ -105,8 +110,9 @@ trait SerializableTrait
     /**
      * Convert object to xml string
      */
-    public function toXmlString(bool $embedded = false): string
-    {
+    public function toXmlString(
+        bool $embedded = false
+    ): string {
         $writer = Writer::create();
 
         if (!$embedded) {
@@ -120,8 +126,9 @@ trait SerializableTrait
     /**
      * Convert object to xml file
      */
-    public function toXmlFile(string $path): File
-    {
+    public function toXmlFile(
+        string $path
+    ): File {
         $writer = Writer::createFile($path);
         $this->xmlSerialize($writer);
         return $writer->toXmlFile($path);
