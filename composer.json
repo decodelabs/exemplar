@@ -9,7 +9,7 @@
             "email": "tom@inflatablecookie.com"
         } ],
     "require": {
-        "php": "^8.0",
+        "php": "^8.1",
 
         "decodelabs/coercion": "^0.2",
         "decodelabs/elementary": "^0.2",

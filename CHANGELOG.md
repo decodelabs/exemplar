@@ -1,3 +1,4 @@
+* Made PHP8.1 minimum version
 * Updated Atlas dependency
 
 ## v0.3.5 (2023-09-26)
