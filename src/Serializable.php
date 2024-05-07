@@ -13,6 +13,11 @@ interface Serializable extends
     Consumer,
     Provider
 {
-    public function xmlUnserialize(Element $element): void;
-    public function xmlSerialize(Writer $writer): void;
+    public function xmlUnserialize(
+        Element $element
+    ): void;
+
+    public function xmlSerialize(
+        Writer $writer
+    ): void;
 }

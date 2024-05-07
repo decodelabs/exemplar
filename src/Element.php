@@ -47,8 +47,9 @@ class Element implements
     /**
      * Create from any xml type
      */
-    public static function fromXml(mixed $xml): static
-    {
+    public static function fromXml(
+        mixed $xml
+    ): static {
         if ($xml instanceof static) {
             return $xml;
         } elseif ($xml instanceof Provider) {
@@ -88,8 +89,9 @@ class Element implements
     /**
      * Create instance from file
      */
-    public static function fromFile(string $path): static
-    {
+    public static function fromFile(
+        string $path
+    ): static {
         $extension = strtolower((string)pathinfo($path, \PATHINFO_EXTENSION));
 
         if ($extension === 'html' || $extension === 'htm') {
@@ -102,8 +104,9 @@ class Element implements
     /**
      * Create instance from XML file
      */
-    public static function fromXmlFile(string $path): static
-    {
+    public static function fromXmlFile(
+        string $path
+    ): static {
         try {
             $document = static::newDomDocument();
             $document->load($path);
@@ -119,8 +122,9 @@ class Element implements
     /**
      * Create instance from string
      */
-    public static function fromString(string $xml): static
-    {
+    public static function fromString(
+        string $xml
+    ): static {
         if (preg_match('/^\<\!DOCTYPE html\>/', $xml)) {
             return static::fromHtmlString($xml);
         }
@@ -131,8 +135,9 @@ class Element implements
     /**
      * Create instance from XML string
      */
-    public static function fromXmlString(string $xml): static
-    {
+    public static function fromXmlString(
+        string $xml
+    ): static {
         $xml = trim($xml);
 
         if (!stristr($xml, '<?xml')) {
@@ -156,8 +161,9 @@ class Element implements
     /**
      * Create HTML instance from file
      */
-    public static function fromHtmlFile(string $path): static
-    {
+    public static function fromHtmlFile(
+        string $path
+    ): static {
         try {
             $document = static::newDomDocument();
             $document->loadHtmlFile($path);
@@ -173,8 +179,9 @@ class Element implements
     /**
      * Create instance from string
      */
-    public static function fromHtmlString(string $xml): static
-    {
+    public static function fromHtmlString(
+        string $xml
+    ): static {
         try {
             $document = static::newDomDocument();
             $document->loadHTML($xml);
@@ -190,8 +197,9 @@ class Element implements
     /**
      * Passthrough
      */
-    public static function fromXmlElement(Element $element): static
-    {
+    public static function fromXmlElement(
+        Element $element
+    ): static {
         if (!$element instanceof static) {
             $element = new static($element->getDomElement());
         }
@@ -202,8 +210,9 @@ class Element implements
     /**
      * Create instance from DOMDocument
      */
-    public static function fromDomDocument(DOMDocument $document): static
-    {
+    public static function fromDomDocument(
+        DOMDocument $document
+    ): static {
         $document->formatOutput = true;
 
         if ($document->documentElement === null) {
@@ -216,8 +225,9 @@ class Element implements
     /**
      * Create instance from DOMElement
      */
-    public static function fromDomElement(DOMElement $element): static
-    {
+    public static function fromDomElement(
+        DOMElement $element
+    ): static {
         self::extractOwnerDocument($element)->formatOutput = true;
         return static::wrapDomNode($element);
     }
@@ -236,8 +246,9 @@ class Element implements
     /**
      * Get element owner document
      */
-    protected static function extractOwnerDocument(DOMElement $element): DOMDocument
-    {
+    protected static function extractOwnerDocument(
+        DOMElement $element
+    ): DOMDocument {
         if ($element->ownerDocument === null) {
             throw Exceptional::UnexpectedValue('Element has no ownerDocument', null, $element);
         }
@@ -250,8 +261,9 @@ class Element implements
     /**
      * Init with DOMElement
      */
-    final public function __construct(DOMElement $element)
-    {
+    final public function __construct(
+        DOMElement $element
+    ) {
         $this->element = $element;
     }
 
@@ -261,8 +273,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setTagName(string $name): static
-    {
+    public function setTagName(
+        string $name
+    ): static {
         $document = $this->getDomDocument();
         $newNode = $document->createElement($name);
         $children = [];
@@ -303,8 +316,9 @@ class Element implements
      * @param array<string, mixed> $attributes
      * @return $this
      */
-    public function setAttributes(array $attributes): static
-    {
+    public function setAttributes(
+        array $attributes
+    ): static {
         foreach ($attributes as $key => $value) {
             $this->setAttribute($key, $value);
         }
@@ -318,19 +332,21 @@ class Element implements
      * @param array<string, mixed> $attributes
      * @return $this
      */
-    public function replaceAttributes(array $attributes): static
-    {
+    public function replaceAttributes(
+        array $attributes
+    ): static {
         return $this->clearAttributes()->setAttributes($attributes);
     }
 
     /**
      * Set attribute on node
      *
-     * @param mixed $value
      * @return $this
      */
-    public function setAttribute(string $key, $value): static
-    {
+    public function setAttribute(
+        string $key,
+        mixed $value
+    ): static {
         $this->element->setAttribute(
             $key,
             Coercion::forceString($value)
@@ -358,8 +374,9 @@ class Element implements
     /**
      * Get single attribute value
      */
-    public function getAttribute(string $key): ?string
-    {
+    public function getAttribute(
+        string $key
+    ): ?string {
         $output = $this->element->getAttribute($key);
 
         if (!strlen($output)) {
@@ -372,8 +389,9 @@ class Element implements
     /**
      * Convert attribute to boolean
      */
-    public function getBooleanAttribute(string $name): bool
-    {
+    public function getBooleanAttribute(
+        string $name
+    ): bool {
         switch ($text = strtolower(trim((string)$this->getAttribute($name)))) {
             case 'false':
             case '0':
@@ -404,8 +422,9 @@ class Element implements
      *
      * @return $this
      */
-    public function removeAttribute(string ...$keys): static
-    {
+    public function removeAttribute(
+        string ...$keys
+    ): static {
         foreach ($keys as $key) {
             $this->element->removeAttribute($key);
         }
@@ -416,8 +435,9 @@ class Element implements
     /**
      * Does node have attribute?
      */
-    public function hasAttribute(string ...$keys): bool
-    {
+    public function hasAttribute(
+        string ...$keys
+    ): bool {
         foreach ($keys as $key) {
             if ($this->element->hasAttribute($key)) {
                 return true;
@@ -430,8 +450,9 @@ class Element implements
     /**
      * Does node have attributes?
      */
-    public function hasAttributes(string ...$keys): bool
-    {
+    public function hasAttributes(
+        string ...$keys
+    ): bool {
         foreach ($keys as $key) {
             if (!$this->element->hasAttribute($key)) {
                 return false;
@@ -446,6 +467,7 @@ class Element implements
      */
     public function countAttributes(): int
     {
+        /** @phpstan-ignore-next-line */
         if ($this->element->attributes === null) {
             return 0;
         }
@@ -476,8 +498,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setInnerXml(string $inner): static
-    {
+    public function setInnerXml(
+        string $inner
+    ): static {
         $this->removeAllChildren();
 
         $fragment = $this->getDomDocument()->createDocumentFragment();
@@ -519,8 +542,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setTextContent(string $content): static
-    {
+    public function setTextContent(
+        string $content
+    ): static {
         $this->removeAllChildren();
 
         $text = $this->getDomDocument()->createTextNode($content);
@@ -593,8 +617,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setCDataContent(string $content): static
-    {
+    public function setCDataContent(
+        string $content
+    ): static {
         $this->removeAllChildren();
 
         $content = $this->getDomDocument()->createCDataSection($content);
@@ -608,8 +633,9 @@ class Element implements
      *
      * @return $this
      */
-    public function prependCDataContent(string $content): static
-    {
+    public function prependCDataContent(
+        string $content
+    ): static {
         $content = $this->getDomDocument()->createCDataSection($content);
 
         if ($this->element->firstChild !== null) {
@@ -626,8 +652,9 @@ class Element implements
      *
      * @return $this
      */
-    public function appendCDataContent(string $content): static
-    {
+    public function appendCDataContent(
+        string $content
+    ): static {
         $content = $this->getDomDocument()->createCDataSection($content);
         $this->element->appendChild($content);
 
@@ -695,8 +722,9 @@ class Element implements
     /**
      * Count child elements of type
      */
-    public function countType(string $name): int
-    {
+    public function countType(
+        string $name
+    ): int {
         $output = 0;
 
         foreach ($this->element->childNodes as $node) {
@@ -736,8 +764,9 @@ class Element implements
      *
      * @return array<static>
      */
-    public function __get(string $name): array
-    {
+    public function __get(
+        string $name
+    ): array {
         return iterator_to_array($this->scanChildList($name));
     }
 
@@ -781,8 +810,9 @@ class Element implements
     /**
      * Get child element by index
      */
-    public function getNthChild(int $index): ?static
-    {
+    public function getNthChild(
+        int $index
+    ): ?static {
         return $this->getNthChildNode($index);
     }
 
@@ -791,8 +821,9 @@ class Element implements
      *
      * @return Traversable<static>
      */
-    public function scanNthChildren(string $formula): Traversable
-    {
+    public function scanNthChildren(
+        string $formula
+    ): Traversable {
         return $this->scanNthChildList($formula);
     }
 
@@ -801,8 +832,9 @@ class Element implements
      *
      * @return array<static>
      */
-    public function getNthChildren(string $formula): array
-    {
+    public function getNthChildren(
+        string $formula
+    ): array {
         return iterator_to_array($this->scanNthChildList($formula));
     }
 
@@ -811,8 +843,9 @@ class Element implements
      *
      * @return Traversable<static>
      */
-    public function scanChildrenOfType(string $name): Traversable
-    {
+    public function scanChildrenOfType(
+        string $name
+    ): Traversable {
         return $this->scanChildList($name);
     }
 
@@ -821,24 +854,27 @@ class Element implements
      *
      * @return array<static>
      */
-    public function getChildrenOfType(string $name): array
-    {
+    public function getChildrenOfType(
+        string $name
+    ): array {
         return iterator_to_array($this->scanChildList($name));
     }
 
     /**
      * Get first child of type
      */
-    public function getFirstChildOfType(string $name): ?static
-    {
+    public function getFirstChildOfType(
+        string $name
+    ): ?static {
         return $this->getFirstChildNode($name);
     }
 
     /**
      * Get last child of type
      */
-    public function getLastChildOfType(string $name): ?static
-    {
+    public function getLastChildOfType(
+        string $name
+    ): ?static {
         return $this->getLastChildNode($name);
     }
 
@@ -882,8 +918,9 @@ class Element implements
      *
      * @return Traversable<static>
      */
-    protected function scanChildList(?string $name = null): Traversable
-    {
+    protected function scanChildList(
+        ?string $name = null
+    ): Traversable {
         foreach ($this->element->childNodes as $node) {
             /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
@@ -902,8 +939,9 @@ class Element implements
     /**
      * Get first element in list
      */
-    protected function getFirstChildNode(?string $name = null): ?static
-    {
+    protected function getFirstChildNode(
+        ?string $name = null
+    ): ?static {
         foreach ($this->element->childNodes as $node) {
             /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
@@ -924,8 +962,9 @@ class Element implements
     /**
      * Get last element in list
      */
-    protected function getLastChildNode(?string $name = null): ?static
-    {
+    protected function getLastChildNode(
+        ?string $name = null
+    ): ?static {
         $lastElement = null;
 
         foreach ($this->element->childNodes as $node) {
@@ -1046,8 +1085,9 @@ class Element implements
     /**
      * Wrap DOMNode as Element
      */
-    protected static function wrapDomNode(DOMNode $node): static
-    {
+    protected static function wrapDomNode(
+        DOMNode $node
+    ): static {
         if (!$node instanceof DOMElement) {
             throw Exceptional::UnexpectedValue('Node is not an element', null, $node);
         }
@@ -1058,8 +1098,9 @@ class Element implements
     /**
      * Wrap DOMNode as Element or null
      */
-    protected static function wrapNullableDomNode(?DOMNode $node): ?static
-    {
+    protected static function wrapNullableDomNode(
+        ?DOMNode $node
+    ): ?static {
         if (!$node instanceof DOMElement) {
             return null;
         }
@@ -1072,8 +1113,9 @@ class Element implements
     /**
      * Get text content of first child of type
      */
-    public function getChildTextContent(string $name): ?string
-    {
+    public function getChildTextContent(
+        string $name
+    ): ?string {
         if (!$node = $this->getFirstChildOfType($name)) {
             return null;
         }
@@ -1084,8 +1126,9 @@ class Element implements
     /**
      * Get CDATA content of first child of type
      */
-    public function getChildCDataContent(string $name): ?string
-    {
+    public function getChildCDataContent(
+        string $name
+    ): ?string {
         if (!$node = $this->getFirstChildOfType($name)) {
             return null;
         }
@@ -1245,8 +1288,9 @@ class Element implements
      *
      * @return $this
      */
-    public function removeChild(Element $child): static
-    {
+    public function removeChild(
+        Element $child
+    ): static {
         $child = $child->getDomElement();
         $this->element->removeChild($child);
         return $this;
@@ -1469,8 +1513,9 @@ class Element implements
     /**
      * Export comment content
      */
-    protected function exportComment(DOMNode $node): string
-    {
+    protected function exportComment(
+        DOMNode $node
+    ): string {
         if (!$node instanceof DOMComment) {
             return '';
         }
@@ -1484,8 +1529,9 @@ class Element implements
     /**
      * Get element by id
      */
-    public function getById(string $id): ?static
-    {
+    public function getById(
+        string $id
+    ): ?static {
         return $this->firstXPath('//*[@id=\'' . $id . '\']');
     }
 
@@ -1494,8 +1540,9 @@ class Element implements
      *
      * @return Traversable<static>
      */
-    public function scanByType(string $type): Traversable
-    {
+    public function scanByType(
+        string $type
+    ): Traversable {
         foreach ($this->getDomDocument()->getElementsByTagName($type) as $node) {
             /** @var DOMNode $node */
             yield $this->wrapDomNode($node);
@@ -1507,8 +1554,9 @@ class Element implements
      *
      * @return array<static>
      */
-    public function getByType(string $type): array
-    {
+    public function getByType(
+        string $type
+    ): array {
         return iterator_to_array($this->scanByType($type));
     }
 
@@ -1517,8 +1565,10 @@ class Element implements
      *
      * @return Traversable<static>
      */
-    public function scanByAttribute(string $name, ?string $value = null): Traversable
-    {
+    public function scanByAttribute(
+        string $name,
+        ?string $value = null
+    ): Traversable {
         if ($value === null) {
             $path = '//*[@' . $name . ']';
         } else {
@@ -1533,8 +1583,10 @@ class Element implements
      *
      * @return array<static>
      */
-    public function getByAttribute(string $name, ?string $value = null): array
-    {
+    public function getByAttribute(
+        string $name,
+        ?string $value = null
+    ): array {
         return iterator_to_array($this->scanByAttribute($name, $value));
     }
 
@@ -1544,8 +1596,9 @@ class Element implements
      *
      * @return Traversable<static>
      */
-    public function scanXPath(string $path): Traversable
-    {
+    public function scanXPath(
+        string $path
+    ): Traversable {
         $xpath = new DOMXPath($this->getDomDocument());
 
         if (!$result = $xpath->query($path, $this->element)) {
@@ -1563,16 +1616,18 @@ class Element implements
      *
      * @return array<static>
      */
-    public function getXPath(string $path): array
-    {
+    public function getXPath(
+        string $path
+    ): array {
         return iterator_to_array($this->scanXPath($path));
     }
 
     /**
      * Get first xPath result
      */
-    public function firstXPath(string $path): ?static
-    {
+    public function firstXPath(
+        string $path
+    ): ?static {
         $xpath = new DOMXPath($this->getDomDocument());
 
         if (!$result = $xpath->query($path, $this->element)) {
@@ -1588,8 +1643,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setXmlVersion(string $version): static
-    {
+    public function setXmlVersion(
+        string $version
+    ): static {
         $this->getDomDocument()->xmlVersion = $version;
         return $this;
     }
@@ -1607,8 +1663,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setDocumentEncoding(string $encoding): static
-    {
+    public function setDocumentEncoding(
+        string $encoding
+    ): static {
         $this->getDomDocument()->xmlEncoding = $encoding;
         return $this;
     }
@@ -1626,8 +1683,9 @@ class Element implements
      *
      * @return $this
      */
-    public function setDocumentStandalone(bool $flag): static
-    {
+    public function setDocumentStandalone(
+        bool $flag
+    ): static {
         $this->getDomDocument()->xmlStandalone = $flag;
         return $this;
     }
@@ -1746,8 +1804,9 @@ class Element implements
     /**
      * Export to string
      */
-    public function toXmlString(bool $embedded = false): string
-    {
+    public function toXmlString(
+        bool $embedded = false
+    ): string {
         $isRoot = $this->element === $this->getDomDocument()->documentElement;
 
         if ($isRoot && !$embedded) {
@@ -1760,8 +1819,9 @@ class Element implements
     /**
      * Export xml to file
      */
-    public function toXmlFile(string $path): File
-    {
+    public function toXmlFile(
+        string $path
+    ): File {
         if (!class_exists(Atlas::class)) {
             throw Exceptional::ComponentUnavailable(
                 'Saving XML to file requires DecodeLabs Atlas'
@@ -1787,8 +1847,9 @@ class Element implements
     /**
      * Normalize string for writing
      */
-    protected static function normalizeString(string $string): string
-    {
+    protected static function normalizeString(
+        string $string
+    ): string {
         return (string)preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', '', $string);
     }
 
@@ -1830,11 +1891,19 @@ class Element implements
      *
      * @param string $key
      */
-    public function offsetUnset(mixed $key): void
-    {
+    public function offsetUnset(
+        mixed $key
+    ): void {
         $this->removeAttribute($key);
     }
 
+    /**
+     * Serialize to json
+     */
+    public function jsonSerialize(): mixed
+    {
+        return (string)$this;
+    }
 
     /**
      * Dump inner xml

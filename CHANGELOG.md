@@ -1,3 +1,8 @@
+## v0.4.0 (2024-05-07)
+* Added JsonSerializable to Markup interface
+* Made PHP8.1 minimum version
+* Updated Atlas dependency
+
 ## v0.3.5 (2023-09-26)
 * Migrated to use effigy in CI workflow
 * Fixed PHP8.1 testing
