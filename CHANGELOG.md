@@ -1,3 +1,4 @@
+* Added JsonSerializable to Markup interface
 * Made PHP8.1 minimum version
 * Updated Atlas dependency
 

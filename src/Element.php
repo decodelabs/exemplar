@@ -1897,6 +1897,13 @@ class Element implements
         $this->removeAttribute($key);
     }
 
+    /**
+     * Serialize to json
+     */
+    public function jsonSerialize(): mixed
+    {
+        return (string)$this;
+    }
 
     /**
      * Dump inner xml

@@ -884,6 +884,14 @@ class Writer implements
         }
     }
 
+    /**
+     * Serialize to json
+     */
+    public function jsonSerialize(): mixed
+    {
+        return (string)$this;
+    }
+
 
     /**
      * Shortcut to set attribute

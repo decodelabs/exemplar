@@ -13,7 +13,7 @@
 
         "decodelabs/coercion": "^0.2",
         "decodelabs/collections": "^0.8",
-        "decodelabs/elementary": "^0.2",
+        "decodelabs/elementary": "^0.3",
         "decodelabs/exceptional": "^0.4",
         "decodelabs/glitch-support": "^0.4"
     },
@@ -31,7 +31,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-develop": "0.3.x-dev"
+            "dev-develop": "0.4.x-dev"
         }
     }
 }
