@@ -1,3 +1,7 @@
+## v0.4.1 (2024-08-21)
+* Converted Writer node consts to enum
+* Updated depdency versions
+
 ## v0.4.0 (2024-05-07)
 * Added JsonSerializable to Markup interface
 * Made PHP8.1 minimum version

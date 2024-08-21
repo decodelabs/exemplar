@@ -18,8 +18,8 @@
         "decodelabs/glitch-support": "^0.4"
     },
     "require-dev": {
-        "decodelabs/phpstan-decodelabs": "^0.6",
-        "decodelabs/atlas": "^0.10|^0.11"
+        "decodelabs/atlas": "^0.12",
+        "decodelabs/phpstan-decodelabs": "^0.6"
     },
     "suggest": {
         "decodelabs/atlas": "Save generated XML to file"
