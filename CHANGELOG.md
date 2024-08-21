@@ -1,3 +1,4 @@
+* Converted Writer node consts to enum
 * Updated depdency versions
 
 ## v0.4.0 (2024-05-07)

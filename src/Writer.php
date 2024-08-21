@@ -34,12 +34,6 @@ class Writer implements
 {
     use AttributeContainerTrait;
 
-    public const ELEMENT = 1;
-    public const CDATA = 2;
-    public const CDATA_ELEMENT = 3;
-    public const COMMENT = 4;
-    public const PI = 5;
-
     protected XMLWriter $document;
     protected ?string $path = null;
 
@@ -55,7 +49,7 @@ class Writer implements
      */
     protected array $rawAttributeNames = [];
 
-    protected ?int $currentNode = null;
+    protected ?WriterNode $currentNode = null;
 
 
     /**
@@ -383,10 +377,10 @@ class Writer implements
         }
 
         $this->document->startElement($name);
-        $this->currentNode = self::ELEMENT;
+        $this->currentNode = WriterNode::Element;
 
         if ($cdata) {
-            $this->currentNode = self::CDATA_ELEMENT;
+            $this->currentNode = WriterNode::CDataElement;
         }
 
         if (!empty($attributes)) {
@@ -405,25 +399,25 @@ class Writer implements
      */
     public function endElement(): static
     {
-        if ($this->currentNode === self::CDATA) {
+        if ($this->currentNode === WriterNode::CData) {
             $this->completeCurrentNode();
         }
 
         if (
-            $this->currentNode !== self::ELEMENT &&
-            $this->currentNode !== self::CDATA_ELEMENT
+            $this->currentNode !== WriterNode::Element &&
+            $this->currentNode !== WriterNode::CDataElement
         ) {
             throw Exceptional::Logic('XML writer is not currently writing an element');
         }
 
         $this->completeCurrentNode();
 
-        if ($this->currentNode === self::CDATA_ELEMENT) {
+        if ($this->currentNode === WriterNode::CDataElement) {
             $this->document->endCData();
         }
 
         $this->document->endElement();
-        $this->currentNode = self::ELEMENT;
+        $this->currentNode = WriterNode::Element;
 
         return $this;
     }
@@ -508,7 +502,7 @@ class Writer implements
     {
         $this->completeCurrentNode();
         $this->document->startCData();
-        $this->currentNode = self::CDATA;
+        $this->currentNode = WriterNode::CData;
         return $this;
     }
 
@@ -520,7 +514,7 @@ class Writer implements
     public function writeCDataContent(
         ?string $content
     ): static {
-        if ($this->currentNode !== self::CDATA) {
+        if ($this->currentNode !== WriterNode::CData) {
             throw Exceptional::Logic('XML writer is not currently writing CDATA');
         }
 
@@ -536,12 +530,12 @@ class Writer implements
      */
     public function endCData(): static
     {
-        if ($this->currentNode !== self::CDATA) {
+        if ($this->currentNode !== WriterNode::CData) {
             throw Exceptional::Logic('XML writer is not current writing CDATA');
         }
 
         $this->document->endCData();
-        $this->currentNode = self::ELEMENT;
+        $this->currentNode = WriterNode::Element;
         return $this;
     }
 
@@ -566,7 +560,7 @@ class Writer implements
     {
         $this->completeCurrentNode();
         $this->document->startComment();
-        $this->currentNode = self::COMMENT;
+        $this->currentNode = WriterNode::Comment;
         return $this;
     }
 
@@ -578,7 +572,7 @@ class Writer implements
     public function writeCommentContent(
         ?string $comment
     ): static {
-        if ($this->currentNode !== self::COMMENT) {
+        if ($this->currentNode !== WriterNode::Comment) {
             throw Exceptional::Logic('XML writer is not currently writing a comment');
         }
 
@@ -594,12 +588,12 @@ class Writer implements
      */
     public function endComment(): static
     {
-        if ($this->currentNode !== self::COMMENT) {
+        if ($this->currentNode !== WriterNode::Comment) {
             throw Exceptional::Logic('XML writer is not currently writing a comment');
         }
 
         $this->document->endComment();
-        $this->currentNode = self::ELEMENT;
+        $this->currentNode = WriterNode::Element;
         return $this;
     }
 
@@ -626,7 +620,7 @@ class Writer implements
     ): static {
         $this->completeCurrentNode();
         $this->document->startPI($target);
-        $this->currentNode = self::PI;
+        $this->currentNode = WriterNode::PI;
         return $this;
     }
 
@@ -638,7 +632,7 @@ class Writer implements
     public function writePiContent(
         ?string $content
     ): static {
-        if ($this->currentNode !== self::PI) {
+        if ($this->currentNode !== WriterNode::PI) {
             throw Exceptional::Logic(
                 'XML writer is not currently writing a processing instruction'
             );
@@ -655,14 +649,14 @@ class Writer implements
      */
     public function endPi(): static
     {
-        if ($this->currentNode !== self::PI) {
+        if ($this->currentNode !== WriterNode::PI) {
             throw Exceptional::Logic(
                 'XML writer is not currently writing a processing instruction'
             );
         }
 
         $this->document->endPI();
-        $this->currentNode = self::ELEMENT;
+        $this->currentNode = WriterNode::Element;
         return $this;
     }
 
@@ -711,8 +705,8 @@ class Writer implements
     protected function completeCurrentNode(): void
     {
         switch ($this->currentNode) {
-            case self::ELEMENT:
-            case self::CDATA_ELEMENT:
+            case WriterNode::Element:
+            case WriterNode::CDataElement:
                 foreach ($this->attributes as $key => $value) {
                     if (is_bool($value)) {
                         $value = $value ? 'true' : 'false';
@@ -732,7 +726,7 @@ class Writer implements
                 $this->attributes = [];
                 $this->rawAttributeNames = [];
 
-                if ($this->currentNode === self::CDATA_ELEMENT) {
+                if ($this->currentNode === WriterNode::CDataElement) {
                     $this->document->startCData();
                 }
 
@@ -744,15 +738,15 @@ class Writer implements
 
                 break;
 
-            case self::CDATA:
+            case WriterNode::CData:
                 $this->endCData();
                 break;
 
-            case self::COMMENT:
+            case WriterNode::Comment:
                 $this->endComment();
                 break;
 
-            case self::PI:
+            case WriterNode::PI:
                 $this->endPi();
                 break;
         }
