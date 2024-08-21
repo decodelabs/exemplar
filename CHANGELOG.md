@@ -1,3 +1,4 @@
+## v0.4.1 (2024-08-21)
 * Converted Writer node consts to enum
 * Updated depdency versions
 
