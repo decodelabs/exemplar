@@ -15,6 +15,9 @@ use DOMDocument;
 use DOMElement;
 use ReflectionClass;
 
+/**
+ * @phpstan-require-implements Serializable
+ */
 trait SerializableTrait
 {
     /**

@@ -1,3 +1,5 @@
+* Added @phpstan-require-implements constraints
+
 ## v0.4.2 (2024-08-21)
 * Updated dependencies
 
