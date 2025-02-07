@@ -1029,7 +1029,7 @@ class Element implements
      */
     protected function scanNthChildList(
         string $formula,
-        string $name = null
+        ?string $name = null
     ): Traversable {
         if (is_numeric($formula)) {
             if ($output = $this->getNthChildNode((int)$formula, $name)) {

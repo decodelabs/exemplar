@@ -82,7 +82,7 @@ class Writer implements
      * Init with optional file path
      */
     final protected function __construct(
-        XMLWriter $document = null,
+        ?XMLWriter $document = null,
         ?string $path = null
     ) {
         if ($document === null) {
@@ -159,9 +159,9 @@ class Writer implements
      */
     public function writeDtd(
         string $name,
-        string $publicId = null,
-        string $systemId = null,
-        string $subset = null
+        ?string $publicId = null,
+        ?string $systemId = null,
+        ?string $subset = null
     ): static {
         if ($this->rootWritten) {
             throw Exceptional::Logic('XML DTD cannot be written once the document is open');
@@ -296,7 +296,7 @@ class Writer implements
     public function writeElement(
         string $name,
         mixed $content = null,
-        array $attributes = null
+        ?array $attributes = null
     ): static {
         $this->startElement($name, $attributes);
 
@@ -315,7 +315,7 @@ class Writer implements
      */
     public function startElement(
         string $name,
-        array $attributes = null
+        ?array $attributes = null
     ): static {
         $this->completeCurrentNode();
 
@@ -486,7 +486,7 @@ class Writer implements
     public function writeCDataElement(
         string $name,
         ?string $content,
-        array $attributes = null
+        ?array $attributes = null
     ): static {
         $this->startElement($name, $attributes);
         $this->writeCData($content);
