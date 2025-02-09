@@ -1,3 +1,5 @@
+* Added PHP8.4 to CI workflow
+
 ## v0.4.3 (2025-02-07)
 * Fixed implicit nullable arguments
 * Added @phpstan-require-implements constraints
