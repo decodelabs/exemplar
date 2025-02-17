@@ -19,11 +19,14 @@ use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
 use DecodeLabs\Glitch\Dumpable;
 use ErrorException;
+use Stringable;
 use Throwable;
 use XMLWriter;
 
 /**
- * @implements ArrayAccess<string, mixed>
+ * @phpstan-type TAttributeValue = string|Stringable|int|float|bool|null
+ * @implements ArrayAccess<string,TAttributeValue>
+ * @implements AttributeContainer<TAttributeValue>
  */
 class Writer implements
     Markup,
@@ -32,6 +35,9 @@ class Writer implements
     ArrayAccess,
     Dumpable
 {
+    /**
+     * @use AttributeContainerTrait<TAttributeValue>
+     */
     use AttributeContainerTrait;
 
     protected XMLWriter $document;
@@ -133,19 +139,27 @@ class Writer implements
         bool $standalone = false
     ): static {
         if ($this->headerWritten) {
-            throw Exceptional::Logic('XML header has already been written');
+            throw Exceptional::Logic(
+                message: 'XML header has already been written'
+            );
         }
 
-        if ($this->dtdWritten || $this->rootWritten) {
-            throw Exceptional::Logic('XML header cannot be written once the document is open');
+        if (
+            $this->dtdWritten ||
+            $this->rootWritten
+        ) {
+            throw Exceptional::Logic(
+                message: 'XML header cannot be written once the document is open'
+            );
         }
 
         try {
             $this->document->startDocument($version, $encoding, $standalone ? 'yes' : 'no');
         } catch (ErrorException $e) {
-            throw Exceptional::InvalidArguement($e->getMessage(), [
-                'previous' => $e
-            ]);
+            throw Exceptional::InvalidArguement(
+                message: $e->getMessage(),
+                previous: $e
+            );
         }
 
         $this->headerWritten = true;
@@ -164,7 +178,9 @@ class Writer implements
         ?string $subset = null
     ): static {
         if ($this->rootWritten) {
-            throw Exceptional::Logic('XML DTD cannot be written once the document is open');
+            throw Exceptional::Logic(
+                message: 'XML DTD cannot be written once the document is open'
+            );
         }
 
         if (!$this->headerWritten) {
@@ -174,9 +190,10 @@ class Writer implements
         try {
             $this->document->writeDtd($name, (string)$publicId, (string)$systemId, (string)$subset);
         } catch (ErrorException $e) {
-            throw Exceptional::InvalidArguement($e->getMessage(), [
-                'previous' => $e
-            ]);
+            throw Exceptional::InvalidArguement(
+                message: $e->getMessage(),
+                previous: $e
+            );
         }
 
         $this->dtdWritten = true;
@@ -193,7 +210,9 @@ class Writer implements
         string $content
     ): static {
         if ($this->rootWritten) {
-            throw Exceptional::Logic('XML DTD cannot be written once the document is open');
+            throw Exceptional::Logic(
+                message: 'XML DTD cannot be written once the document is open'
+            );
         }
 
         if (!$this->headerWritten) {
@@ -203,9 +222,10 @@ class Writer implements
         try {
             $this->document->writeDtdAttlist($name, $content);
         } catch (ErrorException $e) {
-            throw Exceptional::InvalidArguement($e->getMessage(), [
-                'previous' => $e
-            ]);
+            throw Exceptional::InvalidArguement(
+                message: $e->getMessage(),
+                previous: $e
+            );
         }
 
         $this->dtdWritten = true;
@@ -222,7 +242,9 @@ class Writer implements
         string $content
     ): static {
         if ($this->rootWritten) {
-            throw Exceptional::Logic('XML DTD cannot be written once the document is open');
+            throw Exceptional::Logic(
+                message: 'XML DTD cannot be written once the document is open'
+            );
         }
 
         if (!$this->headerWritten) {
@@ -232,9 +254,10 @@ class Writer implements
         try {
             $this->document->writeDtdElement($name, $content);
         } catch (ErrorException $e) {
-            throw Exceptional::InvalidArguement($e->getMessage(), [
-                'previous' => $e
-            ]);
+            throw Exceptional::InvalidArguement(
+                message: $e->getMessage(),
+                previous: $e
+            );
         }
 
         $this->dtdWritten = true;
@@ -255,7 +278,9 @@ class Writer implements
         string $nDataId
     ): static {
         if ($this->rootWritten) {
-            throw Exceptional::Logic('XML DTD cannot be written once the document is open');
+            throw Exceptional::Logic(
+                message: 'XML DTD cannot be written once the document is open'
+            );
         }
 
         if (!$this->headerWritten) {
@@ -265,9 +290,10 @@ class Writer implements
         try {
             $this->document->writeDtdEntity($name, $content, $isParam, $publicId, $systemId, $nDataId);
         } catch (ErrorException $e) {
-            throw Exceptional::InvalidArguement($e->getMessage(), [
-                'previous' => $e
-            ]);
+            throw Exceptional::InvalidArguement(
+                message: $e->getMessage(),
+                previous: $e
+            );
         }
 
         $this->dtdWritten = true;
@@ -330,16 +356,29 @@ class Writer implements
                 $parts = explode('=', $res[1], 2);
 
                 if (empty($key = array_shift($parts))) {
-                    throw Exceptional::UnexpectedValue('Invalid tag attribute definition', null, $res);
+                    throw Exceptional::UnexpectedValue(
+                        message: 'Invalid tag attribute definition',
+                        data: $res
+                    );
                 }
 
                 $value = (string)array_shift($parts);
                 $first = substr($value, 0, 1);
                 $last = substr($value, -1);
 
-                if (strlen($value) > 1
-                && (($first == '"' && $last == '"')
-                || ($first == "'" && $last == "'"))) {
+                if (
+                    strlen($value) > 1 &&
+                    (
+                        (
+                            $first == '"' &&
+                            $last == '"'
+                        ) ||
+                        (
+                            $first == "'" &&
+                            $last == "'"
+                        )
+                    )
+                ) {
                     $value = substr($value, 1, -1);
                 }
 
@@ -359,9 +398,8 @@ class Writer implements
 
         if (empty($name = array_shift($parts))) {
             throw Exceptional::UnexpectedValue(
-                'Unable to parse tag class definition',
-                null,
-                $origName
+                message: 'Unable to parse tag class definition',
+                data: $origName
             );
         }
 
@@ -407,7 +445,9 @@ class Writer implements
             $this->currentNode !== WriterNode::Element &&
             $this->currentNode !== WriterNode::CDataElement
         ) {
-            throw Exceptional::Logic('XML writer is not currently writing an element');
+            throw Exceptional::Logic(
+                message: 'XML writer is not currently writing an element'
+            );
         }
 
         $this->completeCurrentNode();
@@ -444,7 +484,10 @@ class Writer implements
             return $this->renderContent($content($this));
         }
 
-        if (is_iterable($content) && !$content instanceof Markup) {
+        if (
+            is_iterable($content) &&
+            !$content instanceof Markup
+        ) {
             $this->completeCurrentNode();
 
             foreach ($content as $part) {
@@ -515,7 +558,9 @@ class Writer implements
         ?string $content
     ): static {
         if ($this->currentNode !== WriterNode::CData) {
-            throw Exceptional::Logic('XML writer is not currently writing CDATA');
+            throw Exceptional::Logic(
+                message: 'XML writer is not currently writing CDATA'
+            );
         }
 
         $content = self::normalizeString($content);
@@ -531,7 +576,9 @@ class Writer implements
     public function endCData(): static
     {
         if ($this->currentNode !== WriterNode::CData) {
-            throw Exceptional::Logic('XML writer is not current writing CDATA');
+            throw Exceptional::Logic(
+                message: 'XML writer is not current writing CDATA'
+            );
         }
 
         $this->document->endCData();
@@ -573,7 +620,9 @@ class Writer implements
         ?string $comment
     ): static {
         if ($this->currentNode !== WriterNode::Comment) {
-            throw Exceptional::Logic('XML writer is not currently writing a comment');
+            throw Exceptional::Logic(
+                message: 'XML writer is not currently writing a comment'
+            );
         }
 
         $comment = self::normalizeString($comment);
@@ -589,7 +638,9 @@ class Writer implements
     public function endComment(): static
     {
         if ($this->currentNode !== WriterNode::Comment) {
-            throw Exceptional::Logic('XML writer is not currently writing a comment');
+            throw Exceptional::Logic(
+                message: 'XML writer is not currently writing a comment'
+            );
         }
 
         $this->document->endComment();
@@ -634,7 +685,7 @@ class Writer implements
     ): static {
         if ($this->currentNode !== WriterNode::PI) {
             throw Exceptional::Logic(
-                'XML writer is not currently writing a processing instruction'
+                message: 'XML writer is not currently writing a processing instruction'
             );
         }
 
@@ -651,7 +702,7 @@ class Writer implements
     {
         if ($this->currentNode !== WriterNode::PI) {
             throw Exceptional::Logic(
-                'XML writer is not currently writing a processing instruction'
+                message: 'XML writer is not currently writing a processing instruction'
             );
         }
 
@@ -787,7 +838,10 @@ class Writer implements
         $this->finalize();
         $string = $this->__toString();
 
-        if (!$embedded || !$this->headerWritten) {
+        if (
+            !$embedded ||
+            !$this->headerWritten
+        ) {
             return $string;
         }
 
@@ -803,7 +857,7 @@ class Writer implements
     ): File {
         if (!class_exists(Atlas::class)) {
             throw Exceptional::ComponentUnavailable(
-                'Saving XML to file requires DecodeLabs Atlas'
+                message: 'Saving XML to file requires DecodeLabs Atlas'
             );
         }
 
@@ -866,9 +920,8 @@ class Writer implements
 
             if (false === ($output = file_get_contents($this->path))) {
                 throw Exceptional::UnexpectedValue(
-                    'Unable to read contents of file',
-                    null,
-                    $this->path
+                    message: 'Unable to read contents of file',
+                    data: $this->path
                 );
             }
 

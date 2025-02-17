@@ -26,7 +26,7 @@ trait SerializableTrait
     public static function fromXml(
         mixed $xml
     ): static {
-        if ($xml instanceof self) {
+        if ($xml instanceof static) {
             return $xml;
         } elseif ($xml instanceof Provider) {
             return static::fromXmlElement($xml->toXmlElement());
@@ -46,9 +46,8 @@ trait SerializableTrait
             return static::fromXmlString((string)$xml);
         } else {
             throw Exceptional::UnexpectedValue(
-                'Unable to convert item to XML Element',
-                null,
-                $xml
+                message: 'Unable to convert item to XML Element',
+                data: $xml
             );
         }
     }
@@ -88,17 +87,15 @@ trait SerializableTrait
 
         if (!$ref->isInstantiable()) {
             throw Exceptional::Logic(
-                'XML consumer cannot be instantiated',
-                null,
-                $class
+                message: 'XML consumer cannot be instantiated',
+                data: $class
             );
         }
 
         if (!$ref->implementsInterface(Serializable::class)) {
             throw Exceptional::Logic(
-                'XML consumer does not implement DecodeLabs\\Exemplar\\Serializable',
-                null,
-                $class
+                message: 'XML consumer does not implement DecodeLabs\\Exemplar\\Serializable',
+                data: $class
             );
         }
 
