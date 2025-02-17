@@ -11,14 +11,12 @@ namespace DecodeLabs\Exemplar;
 
 use ArrayAccess;
 use Countable;
-
 use DecodeLabs\Atlas;
 use DecodeLabs\Atlas\File;
 use DecodeLabs\Coercion;
 use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
-
 use DOMAttr;
 use DOMComment;
 use DOMDocument;
@@ -29,7 +27,10 @@ use Throwable;
 use Traversable;
 
 /**
- * @implements ArrayAccess<string, mixed>
+ * @phpstan-type TAttributeValue = string|null
+ * @phpstan-type TAttributeInput = string|int|float|bool|null
+ * @implements ArrayAccess<string,TAttributeInput>
+ * @implements AttributeContainer<TAttributeValue,TAttributeInput>
  */
 class Element implements
     Markup,
@@ -39,10 +40,7 @@ class Element implements
     Countable,
     ArrayAccess
 {
-    /**
-     * @var DOMElement
-     */
-    protected $element;
+    protected DOMElement $element;
 
     /**
      * Create from any xml type
@@ -78,9 +76,8 @@ class Element implements
             return static::fromXmlString((string)$xml);
         } else {
             throw Exceptional::UnexpectedValue(
-                'Unable to convert item to XML Element',
-                null,
-                $xml
+                message: 'Unable to convert item to XML Element',
+                data: $xml
             );
         }
     }
@@ -94,7 +91,10 @@ class Element implements
     ): static {
         $extension = strtolower((string)pathinfo($path, \PATHINFO_EXTENSION));
 
-        if ($extension === 'html' || $extension === 'htm') {
+        if (
+            $extension === 'html' ||
+            $extension === 'htm'
+        ) {
             return static::fromHtmlFile($path);
         }
 
@@ -111,9 +111,10 @@ class Element implements
             $document = static::newDomDocument();
             $document->load($path);
         } catch (Throwable $e) {
-            throw Exceptional::Io('Unable to load XML file', [
-                'previous' => $e
-            ]);
+            throw Exceptional::Io(
+                message: 'Unable to load XML file',
+                previous: $e
+            );
         }
 
         return static::fromDomDocument($document);
@@ -150,9 +151,10 @@ class Element implements
             $document = static::newDOMDocument();
             $document->loadXML($xml);
         } catch (Throwable $e) {
-            throw Exceptional::Io('Unable to load XML string', [
-                'previous' => $e
-            ]);
+            throw Exceptional::Io(
+                message: 'Unable to load XML string',
+                previous: $e
+            );
         }
 
         return static::fromDOMDocument($document);
@@ -168,9 +170,10 @@ class Element implements
             $document = static::newDomDocument();
             $document->loadHtmlFile($path);
         } catch (Throwable $e) {
-            throw Exceptional::Io('Unable to load HTML file', [
-                'previous' => $e
-            ]);
+            throw Exceptional::Io(
+                message: 'Unable to load HTML file',
+                previous: $e
+            );
         }
 
         return static::fromDomDocument($document);
@@ -186,9 +189,10 @@ class Element implements
             $document = static::newDomDocument();
             $document->loadHTML($xml);
         } catch (Throwable $e) {
-            throw Exceptional::Io('Unable to load HTML string', [
-                'previous' => $e
-            ]);
+            throw Exceptional::Io(
+                message: 'Unable to load HTML string',
+                previous: $e
+            );
         }
 
         return static::fromDomDocument($document);
@@ -216,7 +220,10 @@ class Element implements
         $document->formatOutput = true;
 
         if ($document->documentElement === null) {
-            throw Exceptional::UnexpectedValue('Document has no documentElement', null, $document);
+            throw Exceptional::UnexpectedValue(
+                message: 'Document has no documentElement',
+                data: $document
+            );
         }
 
         return static::wrapDomNode($document->documentElement);
@@ -250,7 +257,10 @@ class Element implements
         DOMElement $element
     ): DOMDocument {
         if ($element->ownerDocument === null) {
-            throw Exceptional::UnexpectedValue('Element has no ownerDocument', null, $element);
+            throw Exceptional::UnexpectedValue(
+                message: 'Element has no ownerDocument',
+                data: $element
+            );
         }
 
         return $element->ownerDocument;
@@ -281,7 +291,6 @@ class Element implements
         $children = [];
 
         foreach ($this->element->childNodes as $child) {
-            /** @var DOMNode $child */
             $children[] = $document->importNode($child, true);
         }
 
@@ -289,8 +298,7 @@ class Element implements
             $newNode->appendChild($child);
         }
 
-        foreach ($this->element->attributes ?? [] as $attrNode) {
-            /** @var DOMAttr $attrNode */
+        foreach ($this->element->attributes as $attrNode) {
             $document->importNode($attrNode, true);
             $newNode->setAttributeNode($attrNode);
         }
@@ -313,7 +321,7 @@ class Element implements
     /**
      * Merge attributes on node
      *
-     * @param array<string, mixed> $attributes
+     * @param array<string,TAttributeInput> $attributes
      * @return $this
      */
     public function setAttributes(
@@ -329,7 +337,7 @@ class Element implements
     /**
      * Replace attribute on node
      *
-     * @param array<string, mixed> $attributes
+     * @param array<string,TAttributeInput> $attributes
      * @return $this
      */
     public function replaceAttributes(
@@ -341,6 +349,7 @@ class Element implements
     /**
      * Set attribute on node
      *
+     * @param TAttributeInput $value
      * @return $this
      */
     public function setAttribute(
@@ -357,14 +366,13 @@ class Element implements
     /**
      * Get all attribute values
      *
-     * @return array<string, string|null>
+     * @return array<string,TAttributeValue>
      */
     public function getAttributes(): array
     {
         $output = [];
 
         foreach ($this->element->attributes ?? [] as $attrNode) {
-            /** @var DOMAttr $attrNode */
             $output[(string)$attrNode->name] = $attrNode->value;
         }
 
@@ -373,6 +381,8 @@ class Element implements
 
     /**
      * Get single attribute value
+     *
+     * @return ?TAttributeValue
      */
     public function getAttribute(
         string $key
@@ -483,7 +493,6 @@ class Element implements
     public function clearAttributes(): static
     {
         foreach ($this->element->attributes ?? [] as $attrNode) {
-            /** @var DOMAttr $attrNode */
             $this->element->removeAttribute($attrNode->name);
         }
 
@@ -518,7 +527,6 @@ class Element implements
         $output = '';
 
         foreach ($this->element->childNodes as $child) {
-            /** @var DOMNode $child */
             $output .= $this->getDomDocument()->saveXML($child);
         }
 
@@ -569,7 +577,6 @@ class Element implements
         $isRoot = $this->element === $this->getDomDocument()->documentElement;
         $output = '';
 
-        /** @var DOMNode $node */
         foreach ($this->element->childNodes as $node) {
             $value = null;
 
@@ -667,7 +674,6 @@ class Element implements
     public function getFirstCDataSection(): ?string
     {
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_CDATA_SECTION_NODE) {
                 return $node->nodeValue;
             }
@@ -684,7 +690,6 @@ class Element implements
     public function scanAllCDataSections(): Traversable
     {
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_CDATA_SECTION_NODE) {
                 yield (string)$node->nodeValue;
             }
@@ -710,7 +715,6 @@ class Element implements
         $output = 0;
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 $output++;
             }
@@ -728,7 +732,6 @@ class Element implements
         $output = 0;
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if (
                 $node->nodeType == \XML_ELEMENT_NODE &&
                 $node->nodeName == $name
@@ -750,7 +753,6 @@ class Element implements
         }
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 return true;
             }
@@ -922,7 +924,6 @@ class Element implements
         ?string $name = null
     ): Traversable {
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -943,7 +944,6 @@ class Element implements
         ?string $name = null
     ): ?static {
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -968,7 +968,6 @@ class Element implements
         $lastElement = null;
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -1002,7 +1001,6 @@ class Element implements
         }
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -1062,7 +1060,6 @@ class Element implements
         $i = 0;
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 if (
                     $name !== null &&
@@ -1089,7 +1086,10 @@ class Element implements
         DOMNode $node
     ): static {
         if (!$node instanceof DOMElement) {
-            throw Exceptional::UnexpectedValue('Node is not an element', null, $node);
+            throw Exceptional::UnexpectedValue(
+                message: 'Node is not an element',
+                data: $node
+            );
         }
 
         return new static($node);
@@ -1203,7 +1203,7 @@ class Element implements
 
         if ($index < 0) {
             throw Exceptional::OutOfBounds(
-                'Index ' . $origIndex . ' is out of bounds'
+                message: 'Index ' . $origIndex . ' is out of bounds'
             );
         }
 
@@ -1217,7 +1217,6 @@ class Element implements
             $newNode = $this->element->appendChild($newNode);
         } else {
             foreach ($this->element->childNodes as $node) {
-                /** @var DOMNode $node */
                 if (!$node->nodeType == \XML_ELEMENT_NODE) {
                     continue;
                 }
@@ -1258,12 +1257,6 @@ class Element implements
         ?string $value = null
     ): static {
         $origChild = $origChild->getDomElement();
-
-        if (!$origChild instanceof DOMElement) {
-            throw Exceptional::InvalidArgument(
-                'Original child is not a valid element'
-            );
-        }
 
         do {
             $origChild = $origChild->nextSibling;
@@ -1306,7 +1299,6 @@ class Element implements
         $queue = [];
 
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             $queue[] = $node;
         }
 
@@ -1338,7 +1330,6 @@ class Element implements
         $output = -1;
 
         foreach ($this->element->parentNode->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_ELEMENT_NODE) {
                 $output++;
             }
@@ -1361,12 +1352,14 @@ class Element implements
             return true;
         }
 
-        if (!$this->element->previousSibling && !$this->element->nextSibling) {
+        if (
+            !$this->element->previousSibling &&
+            !$this->element->nextSibling
+        ) {
             return true;
         }
 
         foreach ($this->element->parentNode->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node === $this->element) {
                 continue;
             }
@@ -1387,7 +1380,10 @@ class Element implements
     {
         $node = $this->element->previousSibling;
 
-        while ($node && $node->nodeType != \XML_ELEMENT_NODE) {
+        while (
+            $node &&
+            $node->nodeType != \XML_ELEMENT_NODE
+        ) {
             if (!$node = $node->previousSibling) {
                 return null;
             }
@@ -1403,7 +1399,10 @@ class Element implements
     {
         $node = $this->element->nextSibling;
 
-        while ($node && $node->nodeType != \XML_ELEMENT_NODE) {
+        while (
+            $node &&
+            $node->nodeType != \XML_ELEMENT_NODE
+        ) {
             if (!$node = $node->nextSibling) {
                 return null;
             }
@@ -1439,7 +1438,10 @@ class Element implements
 
         do {
             $target = $target->nextSibling;
-        } while ($target && $target->nodeType != \XML_ELEMENT_NODE);
+        } while (
+            $target &&
+            $target->nodeType != \XML_ELEMENT_NODE
+        );
 
         if (!$target) {
             $node = $this->getParentDomElement()->appendChild($node);
@@ -1492,7 +1494,6 @@ class Element implements
     public function scanAllComments(): Traversable
     {
         foreach ($this->element->childNodes as $node) {
-            /** @var DOMNode $node */
             if ($node->nodeType == \XML_COMMENT_NODE) {
                 yield $this->exportComment($node);
             }
@@ -1544,7 +1545,6 @@ class Element implements
         string $type
     ): Traversable {
         foreach ($this->getDomDocument()->getElementsByTagName($type) as $node) {
-            /** @var DOMNode $node */
             yield $this->wrapDomNode($node);
         }
     }
@@ -1606,7 +1606,6 @@ class Element implements
         }
 
         foreach ($result as $node) {
-            /** @var DOMNode $node */
             yield $this->wrapDomNode($node);
         }
     }
@@ -1733,11 +1732,17 @@ class Element implements
     public function getParentDomElement(): DOMElement
     {
         if ($this->element->parentNode === null) {
-            throw Exceptional::UnexpectedValue('Element has no parent node', null, $this->element);
+            throw Exceptional::UnexpectedValue(
+                message: 'Element has no parent node',
+                data: $this->element
+            );
         }
 
         if (!$this->element->parentNode instanceof DOMElement) {
-            throw Exceptional::UnexpectedValue('Element\'s parent is not an element', null, $this->element);
+            throw Exceptional::UnexpectedValue(
+                message: 'Element\'s parent is not an element',
+                data: $this->element
+            );
         }
 
         return $this->element->parentNode;
@@ -1765,7 +1770,10 @@ class Element implements
         }
 
         if (!$node instanceof DOMElement) {
-            throw Exceptional::UnexpectedValue('Node is not an element', null, $node);
+            throw Exceptional::UnexpectedValue(
+                message: 'Node is not an element',
+                data: $node
+            );
         }
 
         return $node;
@@ -1809,7 +1817,10 @@ class Element implements
     ): string {
         $isRoot = $this->element === $this->getDomDocument()->documentElement;
 
-        if ($isRoot && !$embedded) {
+        if (
+            $isRoot &&
+            !$embedded
+        ) {
             return $this->documentToString();
         } else {
             return $this->__toString();
@@ -1824,7 +1835,7 @@ class Element implements
     ): File {
         if (!class_exists(Atlas::class)) {
             throw Exceptional::ComponentUnavailable(
-                'Saving XML to file requires DecodeLabs Atlas'
+                message: 'Saving XML to file requires DecodeLabs Atlas'
             );
         }
 

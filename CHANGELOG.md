@@ -1,3 +1,11 @@
+## v0.5.0 (2025-02-17)
+* Upgraded PHPStan to v2
+* Sorted out attribute value types
+* Tidied boolean logic
+* Fixed Exceptional syntax
+* Added PHP8.4 to CI workflow
+* Made PHP8.4 minimum version
+
 ## v0.4.3 (2025-02-07)
 * Fixed implicit nullable arguments
 * Added @phpstan-require-implements constraints

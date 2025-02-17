@@ -1,0 +1,5 @@
+services:
+    -
+        class: DecodeLabs\PHPStan\ExemplarReflectionExtension
+        tags:
+            - phpstan.broker.propertiesClassReflectionExtension
