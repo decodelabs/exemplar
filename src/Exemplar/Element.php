@@ -358,7 +358,7 @@ class Element implements
     ): static {
         $this->element->setAttribute(
             $key,
-            Coercion::forceString($value)
+            Coercion::toString($value)
         );
         return $this;
     }

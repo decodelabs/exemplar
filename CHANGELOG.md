@@ -1,5 +1,5 @@
-## v0.5.1 (2025-02-17)
-* Fixed Elementary dependency
+## v0.5.1 (2025-02-20)
+* Upgraded Coercion dependency
 
 ## v0.5.0 (2025-02-17)
 * Upgraded PHPStan to v2
