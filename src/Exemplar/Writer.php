@@ -497,7 +497,7 @@ class Writer implements
             return null;
         }
 
-        return Coercion::forceString($content);
+        return Coercion::toString($content);
     }
 
     /**
@@ -763,7 +763,7 @@ class Writer implements
                         $value = $value ? 'true' : 'false';
                     }
 
-                    $value = Coercion::forceString($value);
+                    $value = Coercion::toString($value);
 
                     if (in_array($key, $this->rawAttributeNames)) {
                         $this->document->startAttribute($key);
