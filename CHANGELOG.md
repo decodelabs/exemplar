@@ -1,3 +1,7 @@
+## v0.5.3 (2025-04-02)
+* Upgraded Collections dependency
+* Support named arguments for attributes
+
 ## v0.5.2 (2025-04-02)
 * Upgraded Elementary dependency
 

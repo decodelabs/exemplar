@@ -320,14 +320,17 @@ class Element implements
     /**
      * Merge attributes on node
      *
-     * @param array<string,TAttributeInput> $attributes
+     * @param iterable<string,TAttributeInput> $attributes
+     * @param TAttributeInput ...$attributeList
      * @return $this
      */
     public function setAttributes(
-        array $attributes
+        iterable $attributes = [],
+        mixed ...$attributeList
     ): static {
-        foreach ($attributes as $key => $value) {
-            $this->setAttribute($key, $value);
+        foreach ($attributes + $attributeList as $key => $value) {
+            /** @var TAttributeInput $value */
+            $this->setAttribute((string)$key, $value);
         }
 
         return $this;
@@ -336,13 +339,15 @@ class Element implements
     /**
      * Replace attribute on node
      *
-     * @param array<string,TAttributeInput> $attributes
+     * @param iterable<string,TAttributeInput> $attributes
+     * @param TAttributeInput ...$attributeList
      * @return $this
      */
     public function replaceAttributes(
-        array $attributes
+        iterable $attributes = [],
+        mixed ...$attributeList
     ): static {
-        return $this->clearAttributes()->setAttributes($attributes);
+        return $this->clearAttributes()->setAttributes($attributes, ...$attributeList);
     }
 
     /**
