@@ -17,7 +17,6 @@ use DecodeLabs\Coercion;
 use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
-use DOMAttr;
 use DOMComment;
 use DOMDocument;
 use DOMElement;
