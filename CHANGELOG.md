@@ -1,3 +1,6 @@
+## v0.5.4 (2025-04-02)
+* Fixed attributeList iteration
+
 ## v0.5.3 (2025-04-02)
 * Upgraded Collections dependency
 * Support named arguments for attributes
