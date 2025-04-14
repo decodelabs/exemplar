@@ -11,8 +11,6 @@
 
 Exemplar provides a set of exhaustive and intuitive interfaces for reading, writing and manipulating XML documents and fragments.
 
-_Get news and updates on the [DecodeLabs blog](https://blog.decodelabs.com)._
-
 ---
 
 
