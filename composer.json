@@ -13,7 +13,7 @@
 
         "decodelabs/coercion": "^0.3",
         "decodelabs/collections": "^0.11",
-        "decodelabs/elementary": "^0.5",
+        "decodelabs/elementary": "^0.6",
         "decodelabs/exceptional": "^0.5",
         "decodelabs/glitch-support": "^0.5"
     },
