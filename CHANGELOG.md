@@ -1,3 +1,6 @@
+## v0.5.5 (2025-04-25)
+* Upgraded Elementary dependency
+
 ## v0.5.4 (2025-04-02)
 * Fixed attributeList iteration
 
