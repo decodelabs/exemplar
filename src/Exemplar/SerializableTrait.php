@@ -35,7 +35,7 @@ trait SerializableTrait
         } elseif ($xml instanceof DOMElement) {
             return static::fromXmlElement(Element::fromDomElement($xml));
         } elseif ($xml instanceof File) {
-            return static::fromXmlFile($xml->getPath());
+            return static::fromXmlFile($xml->path);
         } elseif (
             is_string($xml) ||
             (

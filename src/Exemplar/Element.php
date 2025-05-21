@@ -65,7 +65,7 @@ class Element implements
             interface_exists(File::class) &&
             $xml instanceof File
         ) {
-            return static::fromFile($xml->getPath());
+            return static::fromFile($xml->path);
         } elseif (
             is_string($xml) || (
                 is_object($xml) &&
