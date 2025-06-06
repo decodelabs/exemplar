@@ -17,6 +17,8 @@ use DecodeLabs\Coercion;
 use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
+use DecodeLabs\Nuance\Dumpable;
+use DecodeLabs\Nuance\Entity\NativeObject as NuanceEntity;
 use DOMComment;
 use DOMDocument;
 use DOMElement;
@@ -37,7 +39,8 @@ class Element implements
     Provider,
     AttributeContainer,
     Countable,
-    ArrayAccess
+    ArrayAccess,
+    Dumpable
 {
     protected DOMElement $element;
 
@@ -297,7 +300,7 @@ class Element implements
             $newNode->appendChild($child);
         }
 
-        foreach ($this->element->attributes as $attrNode) {
+        foreach ($this->element->attributes ?? [] as $attrNode) {
             $document->importNode($attrNode, true);
             $newNode->setAttributeNode($attrNode);
         }
@@ -484,7 +487,6 @@ class Element implements
      */
     public function countAttributes(): int
     {
-        /** @phpstan-ignore-next-line */
         if ($this->element->attributes === null) {
             return 0;
         }
@@ -1926,7 +1928,7 @@ class Element implements
     /**
      * Dump inner xml
      *
-     * @return array<string, string>
+     * @return array<string,string>
      */
     public function __debugInfo(): array
     {
@@ -1935,13 +1937,10 @@ class Element implements
         ];
     }
 
-    /**
-     * Export for dump inspection
-     *
-     * @return iterable<string, mixed>
-     */
-    public function glitchDump(): iterable
+    public function toNuanceEntity(): NuanceEntity
     {
-        yield 'text' => $this->__toString();
+        $entity = new NuanceEntity($this);
+        $entity->definition = $this->__toString();
+        return $entity;
     }
 }

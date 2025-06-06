@@ -17,7 +17,8 @@ use DecodeLabs\Collections\AttributeContainer;
 use DecodeLabs\Collections\AttributeContainerTrait;
 use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
-use DecodeLabs\Glitch\Dumpable;
+use DecodeLabs\Nuance\Dumpable;
+use DecodeLabs\Nuance\Entity\NativeObject as NuanceEntity;
 use ErrorException;
 use Stringable;
 use Throwable;
@@ -997,17 +998,15 @@ class Writer implements
         ];
     }
 
-    /**
-     * Export for dump inspection
-     *
-     * @return iterable<string, mixed>
-     */
-    public function glitchDump(): iterable
+    public function toNuanceEntity(): NuanceEntity
     {
-        yield 'text' => $this->__toString();
+        $entity = new NuanceEntity($this);
+        $entity->text = $this->__toString();
 
         if ($this->path !== null) {
-            yield 'property:*path' => $this->path;
+            $entity->setProperty('path', $this->path, 'protected');
         }
+
+        return $entity;
     }
 }
