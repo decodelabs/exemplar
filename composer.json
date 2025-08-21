@@ -11,15 +11,18 @@
     "require": {
         "php": "^8.4",
 
-        "decodelabs/coercion": "^0.3.3",
-        "decodelabs/collections": "^0.11.3",
-        "decodelabs/elementary": "^0.6.1",
-        "decodelabs/exceptional": "^0.6.1",
-        "decodelabs/nuance": "^0.1.2"
+        "decodelabs/coercion": "^0.3.5",
+        "decodelabs/collections": "^0.12",
+        "decodelabs/elementary": "^0.6.3",
+        "decodelabs/exceptional": "^0.6.3",
+        "decodelabs/nuance": "^0.1.9"
     },
     "require-dev": {
-        "decodelabs/atlas": "^0.13.1",
+        "decodelabs/atlas": "^0.14",
         "decodelabs/phpstan-decodelabs": "^0.7"
+    },
+    "conflict": {
+        "decodelabs/atlas": "<0.14"
     },
     "suggest": {
         "decodelabs/atlas": "Save generated XML to file"

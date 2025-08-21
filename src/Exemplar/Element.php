@@ -1852,7 +1852,7 @@ class Element implements
         Atlas::createDir($dir);
 
         $this->getDomDocument()->save($path);
-        return Atlas::file($path);
+        return Atlas::getFile($path);
     }
 
     /**

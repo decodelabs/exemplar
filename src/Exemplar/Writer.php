@@ -865,7 +865,7 @@ class Writer implements
         $this->finalize();
 
         if ($path === $this->path) {
-            return Atlas::file($this->path);
+            return Atlas::getFile($this->path);
         }
 
         if ($this->path !== null) {
