@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Unreleased
 - Upgraded Atlas to v0.14
 - Upgraded Collections to v0.12
+- Fixed PHPStan DOMAttr issues
 
 ---
 

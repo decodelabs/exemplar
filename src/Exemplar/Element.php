@@ -19,6 +19,7 @@ use DecodeLabs\Elementary\Markup;
 use DecodeLabs\Exceptional;
 use DecodeLabs\Nuance\Dumpable;
 use DecodeLabs\Nuance\Entity\NativeObject as NuanceEntity;
+use DOMAttr;
 use DOMComment;
 use DOMDocument;
 use DOMElement;
@@ -300,6 +301,7 @@ class Element implements
             $newNode->appendChild($child);
         }
 
+        /** @var DOMAttr $attrNode */
         foreach ($this->element->attributes ?? [] as $attrNode) {
             $document->importNode($attrNode, true);
             $newNode->setAttributeNode($attrNode);
@@ -382,6 +384,7 @@ class Element implements
     {
         $output = [];
 
+        /** @var DOMAttr $attrNode */
         foreach ($this->element->attributes ?? [] as $attrNode) {
             $output[(string)$attrNode->name] = $attrNode->value;
         }
@@ -487,6 +490,7 @@ class Element implements
      */
     public function countAttributes(): int
     {
+        // @phpstan-ignore-next-line
         if ($this->element->attributes === null) {
             return 0;
         }
@@ -501,6 +505,7 @@ class Element implements
      */
     public function clearAttributes(): static
     {
+        /** @var DOMAttr $attrNode */
         foreach ($this->element->attributes ?? [] as $attrNode) {
             $this->element->removeAttribute($attrNode->name);
         }
