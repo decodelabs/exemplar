@@ -16,6 +16,10 @@ Exemplar provides a set of exhaustive and intuitive interfaces for reading, writ
 
 ## Installation
 
+This package requires PHP 8.4 or higher.
+
+Install via Composer:
+
 ```bash
 composer require decodelabs/exemplar
 ```
