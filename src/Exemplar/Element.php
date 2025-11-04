@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @package Exemplar
- * @license http://opensource.org/licenses/MIT
+ * Exemplar
+ * @license https://opensource.org/licenses/MIT
  */
 
 declare(strict_types=1);
@@ -1620,6 +1620,7 @@ class Element implements
         }
 
         foreach ($result as $node) {
+            // @phpstan-ignore-next-line
             yield $this->wrapDomNode($node);
         }
     }
@@ -1647,6 +1648,7 @@ class Element implements
             return null;
         }
 
+        // @phpstan-ignore-next-line
         return $this->wrapNullableDomNode($result->item(0));
     }
 
