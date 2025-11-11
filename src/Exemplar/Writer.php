@@ -928,7 +928,7 @@ class Writer implements
 
             return $output;
         } else {
-            return $this->document->outputMemory();
+            return $this->document->outputMemory(false);
         }
     }
 
