@@ -2,12 +2,17 @@
     "name": "decodelabs/exemplar",
     "description": "Powerful XML tools",
     "type": "library",
-    "keywords": [ "markup", "xml" ],
+    "keywords": [
+        "markup",
+        "xml"
+    ],
     "license": "MIT",
-    "authors": [ {
+    "authors": [
+        {
             "name": "Tom Wright",
             "email": "tom@inflatablecookie.com"
-        } ],
+        }
+    ],
     "require": {
         "php": "^8.4",
 
@@ -19,6 +24,7 @@
     },
     "require-dev": {
         "decodelabs/atlas": "^0.14",
+        "decodelabs/chorus": "^0.1",
         "decodelabs/phpstan-decodelabs": "^0.7"
     },
     "conflict": {
@@ -57,7 +63,5 @@
         "allow-plugins": {
             "phpstan/extension-installer": true
         }
-    },
-    "repositories": {
     }
 }
