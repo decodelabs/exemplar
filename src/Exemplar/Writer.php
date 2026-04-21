@@ -423,6 +423,7 @@ class Writer implements
         }
 
         if (!empty($attributes)) {
+            // @phpstan-ignore-next-line
             $this->setAttributes($attributes);
         }
 
